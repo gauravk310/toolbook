@@ -1,0 +1,3193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Report — Gaurav</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f1117;--bg2:#161b27;--bg3:#1e2436;--bg4:#252d3d;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;--text2:#8a95b0;--text3:#5a6480;
+  --accent:#4f8ef7;--accent2:#3b73e0;
+  --green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+  --radius:12px;--radius-sm:8px;
+  --mono:'JetBrains Mono',monospace;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;}
+.header{background:linear-gradient(135deg,#0d1520 0%,#111827 50%,#0d1a2e 100%);border-bottom:1px solid var(--border);padding:40px 48px 32px;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;top:-80px;right:-80px;width:360px;height:360px;background:radial-gradient(circle,rgba(79,142,247,0.12) 0%,transparent 70%);pointer-events:none;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;}
+.header-eyebrow{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.header h1{font-size:28px;font-weight:600;color:#fff;letter-spacing:-.02em;margin-bottom:6px;}
+.header-sub{font-size:13px;color:var(--text2);}
+.health-badge{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 24px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);min-width:120px;}
+.health-score-num{font-size:36px;font-weight:600;line-height:1;}
+.health-score-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);}
+.nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 48px;position:sticky;top:0;z-index:100;}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;}
+.nav-inner::-webkit-scrollbar{display:none;}
+.nav-tab{padding:14px 16px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;text-decoration:none;}
+.nav-tab:hover{color:var(--text2);}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.main{max-width:1200px;margin:0 auto;padding:40px 48px;display:flex;flex-direction:column;gap:32px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:18px 24px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.card-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.card-title{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.01em;}
+.card-count{margin-left:auto;font-size:12px;color:var(--text3);background:var(--bg4);padding:2px 8px;border-radius:20px;}
+.card-body{padding:20px 24px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.col-span-2{grid-column:span 2;}
+.chart-wrap{position:relative;padding:20px 24px;}
+.chart-wrap canvas{max-width:100%;}
+.chart-wrap-donut{display:flex;align-items:center;gap:28px;padding:20px 24px;}
+.donut-canvas-wrap{flex-shrink:0;width:180px;height:180px;}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:10px;}
+.legend-item{display:flex;align-items:center;gap:10px;font-size:13px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-label{color:var(--text2);flex:1;}
+.legend-val{color:var(--text);font-weight:500;font-variant-numeric:tabular-nums;}
+.kv-table{width:100%;border-collapse:collapse;}
+.kv-table tr{border-bottom:1px solid var(--border);}
+.kv-table tr:last-child{border-bottom:none;}
+.kv-key{padding:10px 0;color:var(--text2);font-size:13px;width:45%;vertical-align:top;}
+.kv-val{padding:10px 0;color:var(--text);font-size:13px;font-weight:500;word-break:break-all;}
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{padding:10px 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);}
+.data-table td{padding:10px 12px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--bg3);color:var(--text);}
+.empty-row{text-align:center;color:var(--text3);font-style:italic;padding:24px !important;}
+.usage-bar-wrap{display:inline-block;width:80px;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;vertical-align:middle;margin-right:6px;}
+.usage-bar{height:100%;border-radius:3px;}
+.usage-pct{font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums;}
+.proc-bar-wrap{width:100%;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.proc-bar{height:100%;background:var(--accent);border-radius:2px;}
+.pid-cell{color:var(--text3);font-family:var(--mono);font-size:12px;}
+.proc-name{color:var(--text);font-weight:500;}
+.pct-cell{color:var(--text2);font-family:var(--mono);font-size:12px;text-align:right;}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;display:flex;align-items:center;gap:12px;}
+.stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.stat-label{font-size:11px;color:var(--text3);margin-bottom:2px;}
+.stat-value{font-size:18px;font-weight:600;color:var(--text);}
+.batt-bar-wrap{width:100%;height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;}
+.batt-bar{height:100%;border-radius:4px;}
+.temp-badge{display:inline-block;padding:2px 10px;border:1px solid;border-radius:20px;font-size:12px;font-weight:600;font-family:var(--mono);}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500;font-family:var(--mono);}
+.badge-blue{background:rgba(79,142,247,0.15);color:var(--accent);}
+.app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;}
+.app-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);transition:border-color .2s;}
+.app-card:hover{border-color:var(--border2);color:var(--text);}
+.app-icon{width:28px;height:28px;border-radius:6px;background:var(--accent2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;}
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.startup-chip{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--text2);}
+.code-block{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;font-family:var(--mono);font-size:12px;color:var(--text2);white-space:pre-wrap;word-break:break-all;line-height:1.7;max-height:320px;overflow-y:auto;}
+.code-block::-webkit-scrollbar{width:6px;}
+.code-block::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+.junk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.junk-tile{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px;text-align:center;}
+.junk-num{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);line-height:1;margin-bottom:4px;}
+.junk-label{font-size:12px;color:var(--text3);}
+.gauge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;padding:20px 24px;}
+.gauge-item{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.gauge-label{font-size:11px;color:var(--text3);text-align:center;max-width:140px;word-break:break-all;}
+.empty-message{color:var(--text3);font-style:italic;font-size:13px;padding:8px 0;}
+section{scroll-margin-top:56px;}
+.footer{border-top:1px solid var(--border);padding:24px 48px;text-align:center;font-size:12px;color:var(--text3);}
+@media(max-width:900px){
+  .header,.footer{padding:24px;}
+  .header-inner{flex-direction:column;}
+  .nav{padding:0 16px;}
+  .main{padding:24px 16px;}
+  .grid-2{grid-template-columns:1fr;}
+  .col-span-2{grid-column:span 1;}
+  .stat-grid{grid-template-columns:1fr;}
+  .chart-wrap-donut{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <div class="header-eyebrow">Windows System Report</div>
+      <h1>Gaurav</h1>
+      <div class="header-sub">Generated Saturday, May 16 2026 at 07:36:27</div>
+    </div>
+    <div class="health-badge">
+      <div class="health-score-num" style="color:#22c55e;">88.9</div>
+      <div class="health-score-label" style="color:#22c55e;">Good</div>
+      <div class="health-score-label">health score</div>
+    </div>
+  </div>
+</div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-tab active" href="#overview">Overview</a>
+    <a class="nav-tab" href="#storage">Storage</a>
+    <a class="nav-tab" href="#battery">Battery</a>
+    <a class="nav-tab" href="#processes">Processes</a>
+    <a class="nav-tab" href="#network">Network</a>
+    <a class="nav-tab" href="#drivers">Drivers</a>
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#1e3a5f;color:#4f8ef7;">💻</div>
+          <span class="card-title">System Information</span>
+        </div>
+        <div class="card-body"><table class="kv-table"><tr><td class="kv-key">System</td><td class="kv-val">Windows</td></tr><tr><td class="kv-key">Node Name</td><td class="kv-val">Gaurav</td></tr><tr><td class="kv-key">Release</td><td class="kv-val">10</td></tr><tr><td class="kv-key">Version</td><td class="kv-val">10.0.26200</td></tr><tr><td class="kv-key">Machine</td><td class="kv-val">AMD64</td></tr><tr><td class="kv-key">Processor</td><td class="kv-val">AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD</td></tr><tr><td class="kv-key">Boot Time</td><td class="kv-val">2026-05-14 20:01:23</td></tr></table></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background:#1a3320;color:#22c55e;">⚙️</div>
+            <span class="card-title">CPU</span>
+          </div>
+          <div class="card-body"><table class="kv-table"><tr><td class="kv-key">Physical Cores</td><td class="kv-val">8</td></tr><tr><td class="kv-key">Total Cores</td><td class="kv-val">16</td></tr><tr><td class="kv-key">Overall CPU Usage</td><td class="kv-val">2.2%</td></tr></table></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background:#2d1f4a;color:#a78bfa;">🧠</div>
+            <span class="card-title">Memory</span>
+          </div>
+          <div class="card-body"><table class="kv-table"><tr><td class="kv-key">Total RAM</td><td class="kv-val">30.77 GB</td></tr><tr><td class="kv-key">Available RAM</td><td class="kv-val">16.93 GB</td></tr><tr><td class="kv-key">Used RAM</td><td class="kv-val">13.84 GB</td></tr><tr><td class="kv-key">RAM Usage</td><td class="kv-val">45.0%</td></tr></table></div>
+        </div>
+      </div>
+
+      <div class="card col-span-2">
+        <div class="card-header">
+          <div class="card-icon" style="background:#1e2e4a;color:#60a5fa;">🖥</div>
+          <span class="card-title">GPU Information</span>
+        </div>
+        <div style="padding:0;">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Driver Version</th><th>Processor</th><th>VRAM</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>AMD Radeon(TM) Graphics</td>
+                <td>32.0.13040.16001</td>
+                <td>AMD Radeon Graphics Processor (0x1681)</td>
+                <td>1024 MB</td>
+            </tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- GRAPH 1: CPU per-core bar -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#1a3320;color:#22c55e;">📈</div>
+          <span class="card-title">CPU Usage — per core</span>
+        </div>
+        <div class="chart-wrap" style="height:220px;">
+          <canvas id="cpuChart"></canvas>
+        </div>
+      </div>
+
+      <!-- GRAPH 2: RAM donut -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#2d1f4a;color:#a78bfa;">🧠</div>
+          <span class="card-title">RAM Breakdown</span>
+        </div>
+        <div class="chart-wrap-donut">
+          <div class="donut-canvas-wrap"><canvas id="ramChart"></canvas></div>
+          <div class="donut-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#a78bfa;"></div>
+              <span class="legend-label">Used</span>
+              <span class="legend-val">13.84 GB</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#22c55e;"></div>
+              <span class="legend-label">Available</span>
+              <span class="legend-val">16.93 GB</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#3b73e0;"></div>
+              <span class="legend-label">Cached / Other</span>
+              <span class="legend-val">0.0 GB</span>
+            </div>
+            <div class="legend-item" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+              <span class="legend-label" style="color:var(--text3);font-size:12px;">Total usage</span>
+              <span class="legend-val" style="font-size:20px;">45.0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- STORAGE -->
+  <section id="storage">
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <!-- GRAPH 3: Disk grouped bar -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#1a2e1a;color:#4ade80;">📊</div>
+          <span class="card-title">Disk Space by Drive</span>
+        </div>
+        <div class="chart-wrap" style="height:240px;">
+          <canvas id="diskChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#1a2e1a;color:#4ade80;">💾</div>
+          <span class="card-title">Storage Details</span>
+        </div>
+        <div style="padding:0;">
+          <table class="data-table">
+            <thead><tr><th>Drive</th><th>File System</th><th>Total</th><th>Used</th><th>Free</th><th>Usage</th></tr></thead>
+            <tbody>
+            <tr>
+                <td><span class="badge badge-blue">C:\</span></td>
+                <td>NTFS</td>
+                <td>175.8 GB</td>
+                <td>154.9 GB</td>
+                <td>21.0 GB</td>
+                <td>
+                    <div class="usage-bar-wrap">
+                        <div class="usage-bar" style="width:88.1%; background:#ef4444;"></div>
+                    </div>
+                    <span class="usage-pct">88.1%</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-blue">D:\</span></td>
+                <td>NTFS</td>
+                <td>198.4 GB</td>
+                <td>4.8 GB</td>
+                <td>193.5 GB</td>
+                <td>
+                    <div class="usage-bar-wrap">
+                        <div class="usage-bar" style="width:2.4%; background:#22c55e;"></div>
+                    </div>
+                    <span class="usage-pct">2.4%</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-blue">E:\</span></td>
+                <td>NTFS</td>
+                <td>101.8 GB</td>
+                <td>16.6 GB</td>
+                <td>85.1 GB</td>
+                <td>
+                    <div class="usage-bar-wrap">
+                        <div class="usage-bar" style="width:16.3%; background:#22c55e;"></div>
+                    </div>
+                    <span class="usage-pct">16.3%</span>
+                </td>
+            </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BATTERY -->
+  <section id="battery">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#1a2e1a;color:#4ade80;">🔋</div>
+        <span class="card-title">Battery</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#1a2e1a; color:#22c55e;">🔋</div>
+                <div class="stat-body">
+                    <div class="stat-label">Charge Level</div>
+                    <div class="stat-value" style="color:#22c55e;">82%</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#1e2e3a; color:#4f8ef7;">⚡</div>
+                <div class="stat-body">
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value">On Battery</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#2a2a1e; color:#fbbf24;">⏱</div>
+                <div class="stat-body">
+                    <div class="stat-label">Time Remaining</div>
+                    <div class="stat-value">4h 45m</div>
+                </div>
+            </div>
+        </div>
+        <div class="batt-bar-wrap" style="margin-bottom:20px;">
+            <div class="batt-bar" style="width:82%; background:#22c55e;"></div>
+        </div>
+        <div class="section-sub-title" style="font-size:12px;font-weight:600;text-transform:uppercase;
+             letter-spacing:.08em;color:var(--text3);margin-bottom:12px;">Battery Health Report</div>
+        <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#1a2e1a; color:#22c55e;">🩺</div>
+                <div class="stat-body">
+                    <div class="stat-label">Health</div>
+                    <div class="stat-value" style="color:#22c55e;">92.4%</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#2a1e3a; color:#c084fc;">🏷</div>
+                <div class="stat-body">
+                    <div class="stat-label">Condition</div>
+                    <div class="stat-value" style="color:#22c55e;">Excellent</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#1e2e3a; color:#60a5fa;">🔄</div>
+                <div class="stat-body">
+                    <div class="stat-label">Cycle Count</div>
+                    <div class="stat-value">106</div>
+                </div>
+            </div>
+        </div>
+        <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#2a2a1e; color:#fbbf24;">⚗️</div>
+                <div class="stat-body">
+                    <div class="stat-label">Design Capacity</div>
+                    <div class="stat-value" style="font-size:15px;">57,000 mWh</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#1a2e1a; color:#4ade80;">⚡</div>
+                <div class="stat-body">
+                    <div class="stat-label">Full Charge</div>
+                    <div class="stat-value" style="font-size:15px;">52,680 mWh</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#2a1e1e; color:#f87171;">📉</div>
+                <div class="stat-body">
+                    <div class="stat-label">Capacity Loss</div>
+                    <div class="stat-value" style="font-size:15px;color:#ef4444;">4,320 mWh</div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:14px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Health bar</div>
+            <div class="batt-bar-wrap">
+                <div class="batt-bar" style="width:92.4%; background:#22c55e;"></div>
+            </div>
+        </div></div>
+    </div>
+  </section>
+
+  <!-- PROCESSES -->
+  <section id="processes">
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <!-- GRAPH 5: Top 10 processes horizontal bar -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#1e2d3a;color:#60a5fa;">📊</div>
+          <span class="card-title">Top 10 Processes by Memory</span>
+        </div>
+        <div class="chart-wrap" style="height:300px;">
+          <canvas id="procChart"></canvas>
+        </div>
+      </div>
+  </section>
+
+  <!-- NETWORK -->
+  <section id="network">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#1e2e3a;color:#38bdf8;">📡</div>
+        <span class="card-title">WiFi Information</span>
+      </div>
+      <div style="padding:0;">
+        <table class="data-table">
+          <thead><tr><th style="width:40%;">Property</th><th>Value</th></tr></thead>
+          <tbody><tr><td class="kv-key">Name</td><td class="kv-val">Wi-Fi 2</td></tr><tr><td class="kv-key">Description</td><td class="kv-val">Qualcomm WCN685x Wi-Fi 6E Dual Band Simultaneous (DBS) Network Adapter</td></tr><tr><td class="kv-key">GUID</td><td class="kv-val">74b927cc-73b4-4442-a429-e6e2b83ded8a</td></tr><tr><td class="kv-key">Physical address</td><td class="kv-val">04:7b:cb:c4:f3:7c</td></tr><tr><td class="kv-key">Interface type</td><td class="kv-val">Primary</td></tr><tr><td class="kv-key">State</td><td class="kv-val">connected</td></tr><tr><td class="kv-key">SSID</td><td class="kv-val">iamgk</td></tr><tr><td class="kv-key">AP BSSID</td><td class="kv-val">b6:e6:b2:d3:ce:20</td></tr><tr><td class="kv-key">Band</td><td class="kv-val">5 GHz</td></tr><tr><td class="kv-key">Channel</td><td class="kv-val">40</td></tr><tr><td class="kv-key">Connected Akm-cipher</td><td class="kv-val">[ akm = 00-0f-ac:02, cipher =  00-0f-ac:04 ]</td></tr><tr><td class="kv-key">Network type</td><td class="kv-val">Infrastructure</td></tr><tr><td class="kv-key">Radio type</td><td class="kv-val">802.11ac</td></tr><tr><td class="kv-key">Authentication</td><td class="kv-val">WPA2-Personal</td></tr><tr><td class="kv-key">Cipher</td><td class="kv-val">CCMP</td></tr><tr><td class="kv-key">Connection mode</td><td class="kv-val">Auto Connect</td></tr><tr><td class="kv-key">Receive rate (Mbps)</td><td class="kv-val">866.7</td></tr><tr><td class="kv-key">Transmit rate (Mbps)</td><td class="kv-val">866.7</td></tr><tr><td class="kv-key">Signal</td><td class="kv-val">100%</td></tr><tr><td class="kv-key">Rssi</td><td class="kv-val">-35</td></tr><tr><td class="kv-key">Profile</td><td class="kv-val">iamgk</td></tr><tr><td class="kv-key">QoS MSCS Configured</td><td class="kv-val">0</td></tr><tr><td class="kv-key">QoS Map Configured</td><td class="kv-val">0</td></tr><tr><td class="kv-key">QoS Map Allowed by Policy</td><td class="kv-val">0</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- DRIVERS -->
+  <section id="drivers">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#2a2a1e;color:#fbbf24;">🔧</div>
+        <span class="card-title">Driver Report</span>
+      </div>
+      <div style="padding:0;max-height:480px;overflow-y:auto;">
+        <table class="data-table">
+          <thead><tr><th>Module Name</th><th>Display Name</th><th>Type</th><th>Status</th></tr></thead>
+          <tbody>
+                <tr>
+                    <td class="proc-name">1394ohci</td>
+                    <td style="color:var(--text2);">1394 OHCI Compliant Host Controller</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">3ware</td>
+                    <td style="color:var(--text2);">3ware</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ACPI</td>
+                    <td style="color:var(--text2);">Microsoft ACPI Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AcpiAudioCompositorInbox</td>
+                    <td style="color:var(--text2);">ACPI Audio Compositor Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AcpiDev</td>
+                    <td style="color:var(--text2);">ACPI Devices driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">acpiex</td>
+                    <td style="color:var(--text2);">Microsoft ACPIEx Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">acpipagr</td>
+                    <td style="color:var(--text2);">ACPI Processor Aggregator Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AcpiPmi</td>
+                    <td style="color:var(--text2);">ACPI Power Meter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">acpitime</td>
+                    <td style="color:var(--text2);">ACPI Wake Alarm Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Acx01000</td>
+                    <td style="color:var(--text2);">Acx01000</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ADP80XX</td>
+                    <td style="color:var(--text2);">ADP80XX</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AFD</td>
+                    <td style="color:var(--text2);">Ancillary Function Driver for Winsock</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">afunix</td>
+                    <td style="color:var(--text2);">afunix</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ahcache</td>
+                    <td style="color:var(--text2);">Application Compatibility Cache</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">amdfendr</td>
+                    <td style="color:var(--text2);">AMD Crash Defender Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">amdfendrmgr</td>
+                    <td style="color:var(--text2);">AMD Crash Defender Manager Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">amdgpio2</td>
+                    <td style="color:var(--text2);">AMD GPIO Client Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">amdi2c</td>
+                    <td style="color:var(--text2);">AMD I2C Controller Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AmdK8</td>
+                    <td style="color:var(--text2);">AMD K8 Processor Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AmdPPM</td>
+                    <td style="color:var(--text2);">AMD Processor Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">amdsata</td>
+                    <td style="color:var(--text2);">amdsata</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">amdsbs</td>
+                    <td style="color:var(--text2);">amdsbs</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">amduw23g</td>
+                    <td style="color:var(--text2);">amduw23g</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">amdwps</td>
+                    <td style="color:var(--text2);">AMD Workload Profiling Scheduling Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">amdxata</td>
+                    <td style="color:var(--text2);">amdxata</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AppID</td>
+                    <td style="color:var(--text2);">AppID Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AppleSSD</td>
+                    <td style="color:var(--text2);">Apple Solid State Drive Device</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">applockerfltr</td>
+                    <td style="color:var(--text2);">Smartlocker Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AppvStrm</td>
+                    <td style="color:var(--text2);">AppvStrm</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AppvVemgr</td>
+                    <td style="color:var(--text2);">AppvVemgr</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AppvVfs</td>
+                    <td style="color:var(--text2);">AppvVfs</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">arcsas</td>
+                    <td style="color:var(--text2);">Adaptec SAS/SATA-II RAID Storport's Miniport Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">AsyncMac</td>
+                    <td style="color:var(--text2);">RAS Asynchronous Media Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">atapi</td>
+                    <td style="color:var(--text2);">IDE Channel</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">b06bdrv</td>
+                    <td style="color:var(--text2);">QLogic Network Adapter VBD</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">bam</td>
+                    <td style="color:var(--text2);">Background Activity Moderator Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BasicDisplay</td>
+                    <td style="color:var(--text2);">BasicDisplay</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BasicRender</td>
+                    <td style="color:var(--text2);">BasicRender</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">bcmfn2</td>
+                    <td style="color:var(--text2);">bcmfn2 Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Beep</td>
+                    <td style="color:var(--text2);">Beep</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">bfs</td>
+                    <td style="color:var(--text2);">Brokering File System</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">bindflt</td>
+                    <td style="color:var(--text2);">Windows Bind Filter Driver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">bowser</td>
+                    <td style="color:var(--text2);">Browser</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BthA2dp</td>
+                    <td style="color:var(--text2);">Microsoft Bluetooth A2dp driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BthEnum</td>
+                    <td style="color:var(--text2);">Bluetooth Enumerator Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BthHFAud</td>
+                    <td style="color:var(--text2);">Microsoft Bluetooth Hands-Free Audio driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BthHFEnum</td>
+                    <td style="color:var(--text2);">Microsoft Bluetooth Hands-Free Profile driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BthLEEnum</td>
+                    <td style="color:var(--text2);">Bluetooth Low Energy Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BthMini</td>
+                    <td style="color:var(--text2);">Bluetooth Radio Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BTHMODEM</td>
+                    <td style="color:var(--text2);">Bluetooth Modem Communications Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BthPan</td>
+                    <td style="color:var(--text2);">Bluetooth Device (Personal Area Network)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BTHPORT</td>
+                    <td style="color:var(--text2);">Bluetooth Port Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">BTHUSB</td>
+                    <td style="color:var(--text2);">Bluetooth Radio USB Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">bttflt</td>
+                    <td style="color:var(--text2);">Microsoft Hyper-V VHDPMEM BTT Filter</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">buttonconverter</td>
+                    <td style="color:var(--text2);">Service for Portable Device Control devices</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">CAD</td>
+                    <td style="color:var(--text2);">Charge Arbitration Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">CDD</td>
+                    <td style="color:var(--text2);">Canonical Display Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">cdfs</td>
+                    <td style="color:var(--text2);">CD/DVD File System Reader</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">cdrom</td>
+                    <td style="color:var(--text2);">CD-ROM Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">cht4iscsi</td>
+                    <td style="color:var(--text2);">cht4iscsi</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">cht4vbd</td>
+                    <td style="color:var(--text2);">Chelsio Virtual Bus Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">CimFS</td>
+                    <td style="color:var(--text2);">CimFS</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">circlass</td>
+                    <td style="color:var(--text2);">Consumer IR Devices</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">CldFlt</td>
+                    <td style="color:var(--text2);">Windows Cloud Files Filter Driver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">CLFS</td>
+                    <td style="color:var(--text2);">Common Log (CLFS)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">CmBatt</td>
+                    <td style="color:var(--text2);">Microsoft ACPI Control Method Battery Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">CNG</td>
+                    <td style="color:var(--text2);">CNG</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">cnghwassist</td>
+                    <td style="color:var(--text2);">CNG Hardware Assist algorithm provider</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">CompositeBus</td>
+                    <td style="color:var(--text2);">Composite Bus Enumerator Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">condrv</td>
+                    <td style="color:var(--text2);">Console Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">CSC</td>
+                    <td style="color:var(--text2);">Offline Files Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">dam</td>
+                    <td style="color:var(--text2);">Desktop Activity Moderator Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">devmap</td>
+                    <td style="color:var(--text2);">Usermode Device Mapper Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Dfsc</td>
+                    <td style="color:var(--text2);">DFS Namespace Client Driver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">disk</td>
+                    <td style="color:var(--text2);">Disk Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">DisplayMux</td>
+                    <td style="color:var(--text2);">Microsoft DisplayMux</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">dmvsc</td>
+                    <td style="color:var(--text2);">dmvsc</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">drmkaud</td>
+                    <td style="color:var(--text2);">Microsoft Trusted Audio Drivers</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">DRTMNull</td>
+                    <td style="color:var(--text2);">DRTMNull</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">DXGKrnl</td>
+                    <td style="color:var(--text2);">LDDM Graphics Subsystem</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ebdrv</td>
+                    <td style="color:var(--text2);">QLogic 10 Gigabit Ethernet Adapter VBD</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ebdrv0</td>
+                    <td style="color:var(--text2);">QLogic Legacy Ethernet Adapter VBD</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">EhStorClass</td>
+                    <td style="color:var(--text2);">Enhanced Storage Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">EhStorTcgDrv</td>
+                    <td style="color:var(--text2);">Microsoft driver for storage devices supporting IEEE 1667 and TCG protocols</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ErrDev</td>
+                    <td style="color:var(--text2);">Microsoft Hardware Error Device Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ExecutionContext</td>
+                    <td style="color:var(--text2);">CPU Scheduler for High Performance I/O</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">exfat</td>
+                    <td style="color:var(--text2);">exFAT File System Driver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">fastfat</td>
+                    <td style="color:var(--text2);">FAT12/16/32 File System Driver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">fdc</td>
+                    <td style="color:var(--text2);">Floppy Disk Controller Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">FileCrypt</td>
+                    <td style="color:var(--text2);">FileCrypt</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">FileInfo</td>
+                    <td style="color:var(--text2);">File Information FS MiniFilter</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Filetrace</td>
+                    <td style="color:var(--text2);">Filetrace</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">flpydisk</td>
+                    <td style="color:var(--text2);">Floppy Disk Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">FltMgr</td>
+                    <td style="color:var(--text2);">FltMgr</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">FsDepends</td>
+                    <td style="color:var(--text2);">File System Dependency Minifilter</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">fse</td>
+                    <td style="color:var(--text2);">Flow steering engine</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">fvevol</td>
+                    <td style="color:var(--text2);">BitLocker Drive Encryption Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">gencounter</td>
+                    <td style="color:var(--text2);">Microsoft Hyper-V Generation Counter</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">genericusbfn</td>
+                    <td style="color:var(--text2);">Generic USB Function Class</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">GenPass</td>
+                    <td style="color:var(--text2);">Microsoft GenPass Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">GPIOClx0101</td>
+                    <td style="color:var(--text2);">Microsoft GPIO Class Extension Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HdAudAddService</td>
+                    <td style="color:var(--text2);">Microsoft 1.1 UAA Function Driver for High Definition Audio Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HDAudBus</td>
+                    <td style="color:var(--text2);">Microsoft UAA Bus Driver for High Definition Audio</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HidBatt</td>
+                    <td style="color:var(--text2);">HID UPS Battery Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HidBth</td>
+                    <td style="color:var(--text2);">Microsoft Bluetooth HID Miniport</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">hidi2c</td>
+                    <td style="color:var(--text2);">Microsoft I2C HID Miniport Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">hidinterrupt</td>
+                    <td style="color:var(--text2);">Common Driver for HID Buttons implemented with interrupts</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HidIr</td>
+                    <td style="color:var(--text2);">Microsoft Infrared HID Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">hidspi</td>
+                    <td style="color:var(--text2);">Microsoft SPI HID Miniport Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HidSpiCx</td>
+                    <td style="color:var(--text2);">HidSpi KMDF Class Extension</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HidUsb</td>
+                    <td style="color:var(--text2);">Microsoft HID Class Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">hnswfpdriver</td>
+                    <td style="color:var(--text2);">HNS WFP Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HpSAMD</td>
+                    <td style="color:var(--text2);">HpSAMD</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Hsp</td>
+                    <td style="color:var(--text2);">Microsoft Pluton Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">hsstap</td>
+                    <td style="color:var(--text2);">HotspotShield TAP-Windows Adapter V9</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HTTP</td>
+                    <td style="color:var(--text2);">HTTP Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">hvcrash</td>
+                    <td style="color:var(--text2);">hvcrash</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">hvservice</td>
+                    <td style="color:var(--text2);">Microsoft Hypervisor Service Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">hvsocketcontrol</td>
+                    <td style="color:var(--text2);">hvsocketcontrol</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HwNClx0101</td>
+                    <td style="color:var(--text2);">Microsoft Hardware Notifications Class Extension Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">hwpolicy</td>
+                    <td style="color:var(--text2);">Hardware Policy Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">hyperkbd</td>
+                    <td style="color:var(--text2);">hyperkbd</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">HyperVideo</td>
+                    <td style="color:var(--text2);">HyperVideo</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">I3CHost</td>
+                    <td style="color:var(--text2);">I3C Host Controller Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">i8042prt</td>
+                    <td style="color:var(--text2);">i8042 Keyboard and PS/2 Mouse Port Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iagpio</td>
+                    <td style="color:var(--text2);">Intel Serial IO GPIO Controller Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iai2c</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO I2C Host Controller</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaLPSS2i_GPIO2</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO GPIO Driver v2</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaLPSS2i_GPIO2_BXT_P</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO GPIO Driver v2</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaLPSS2i_GPIO2_CNL</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO GPIO Driver v2</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaLPSS2i_GPIO2_GLK</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO GPIO Driver v2</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaLPSS2i_I2C</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO I2C Driver v2</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaLPSS2i_I2C_BXT_P</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO I2C Driver v2</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaLPSS2i_I2C_CNL</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO I2C Driver v2</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaLPSS2i_I2C_GLK</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO I2C Driver v2</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaLPSSi_GPIO</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO GPIO Controller Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaLPSSi_I2C</td>
+                    <td style="color:var(--text2);">Intel(R) Serial IO I2C Controller Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaStorAVC</td>
+                    <td style="color:var(--text2);">Intel Chipset SATA RAID Controller</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iaStorV</td>
+                    <td style="color:var(--text2);">Intel RAID Controller Windows 7</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ibbus</td>
+                    <td style="color:var(--text2);">Mellanox InfiniBand Bus/AL (Filter Driver)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">IBMPMDRV</td>
+                    <td style="color:var(--text2);">IBMPMDRV</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">IndirectKmd</td>
+                    <td style="color:var(--text2);">Indirect Displays Kernel-Mode Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">intelide</td>
+                    <td style="color:var(--text2);">intelide</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">intelpep</td>
+                    <td style="color:var(--text2);">Intel(R) Power Engine Plug-in Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">intelpmax</td>
+                    <td style="color:var(--text2);">Intel(R) Dynamic Device Peak Power Manager Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">IntelPMT</td>
+                    <td style="color:var(--text2);">Intel(R) Platform Monitoring Technology Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">intelppm</td>
+                    <td style="color:var(--text2);">Intel Processor Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iorate</td>
+                    <td style="color:var(--text2);">Disk I/O Rate Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">IpFilterDriver</td>
+                    <td style="color:var(--text2);">IP Traffic Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">IPMIDRV</td>
+                    <td style="color:var(--text2);">IPMIDRV</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">IPNAT</td>
+                    <td style="color:var(--text2);">IP Network Address Translator</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">IPT</td>
+                    <td style="color:var(--text2);">IPT</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">isapnp</td>
+                    <td style="color:var(--text2);">isapnp</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">iScsiPrt</td>
+                    <td style="color:var(--text2);">iScsiPort Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ItSas35i</td>
+                    <td style="color:var(--text2);">ItSas35i</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">kbdclass</td>
+                    <td style="color:var(--text2);">Keyboard Class Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">kbdhid</td>
+                    <td style="color:var(--text2);">Keyboard HID Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">kbldfltr</td>
+                    <td style="color:var(--text2);">kbldfltr</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">kdnic</td>
+                    <td style="color:var(--text2);">Microsoft Kernel Debug Network Miniport</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">kdnic_legacy</td>
+                    <td style="color:var(--text2);">Microsoft Kernel Debug Network Miniport (NDIS 6.20)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">KSecDD</td>
+                    <td style="color:var(--text2);">KSecDD</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">KSecPkg</td>
+                    <td style="color:var(--text2);">KSecPkg</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">KslD</td>
+                    <td style="color:var(--text2);">KslD</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ksthunk</td>
+                    <td style="color:var(--text2);">Kernel Streaming Thunks</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">l1vhlwf</td>
+                    <td style="color:var(--text2);">Nested Network Virtualization</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">l2bridge</td>
+                    <td style="color:var(--text2);">Bridge Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">lltdio</td>
+                    <td style="color:var(--text2);">Link-Layer Topology Discovery Mapper I/O Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">LSI_SAS</td>
+                    <td style="color:var(--text2);">LSI_SAS</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">LSI_SAS2i</td>
+                    <td style="color:var(--text2);">LSI_SAS2i</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">LSI_SAS3i</td>
+                    <td style="color:var(--text2);">LSI_SAS3i</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">luafv</td>
+                    <td style="color:var(--text2);">UAC File Virtualization</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">lunparser</td>
+                    <td style="color:var(--text2);">LUN Parser</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">lxss</td>
+                    <td style="color:var(--text2);">lxss</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mausbhost</td>
+                    <td style="color:var(--text2);">MA-USB Host Controller Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mausbip</td>
+                    <td style="color:var(--text2);">MA-USB IP Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MbbCx</td>
+                    <td style="color:var(--text2);">MBB Network Adapter Class Extension</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">megasas2i</td>
+                    <td style="color:var(--text2);">megasas2i</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">megasas35i</td>
+                    <td style="color:var(--text2);">megasas35i</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">megasr</td>
+                    <td style="color:var(--text2);">megasr</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Microsoft_Bluetooth_AvrcpTransport</td>
+                    <td style="color:var(--text2);">Microsoft Bluetooth Avrcp Transport Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mlx4_bus</td>
+                    <td style="color:var(--text2);">Mellanox ConnectX Bus Enumerator</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MMCSS</td>
+                    <td style="color:var(--text2);">Multimedia Class Scheduler</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Modem</td>
+                    <td style="color:var(--text2);">Modem</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">monitor</td>
+                    <td style="color:var(--text2);">Microsoft Monitor Class Function Driver Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mouclass</td>
+                    <td style="color:var(--text2);">Mouse Class Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mouhid</td>
+                    <td style="color:var(--text2);">Mouse HID Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mountmgr</td>
+                    <td style="color:var(--text2);">Mount Point Manager</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mpi3drvi</td>
+                    <td style="color:var(--text2);">mpi3drvi</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mpsdrv</td>
+                    <td style="color:var(--text2);">Windows Defender Firewall Authorization Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MRxDAV</td>
+                    <td style="color:var(--text2);">WebDav Client Redirector Driver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mrxsmb</td>
+                    <td style="color:var(--text2);">SMB MiniRedirector Wrapper and Engine</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mrxsmb20</td>
+                    <td style="color:var(--text2);">SMB 2.0 MiniRedirector</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MsBridge</td>
+                    <td style="color:var(--text2);">Microsoft MAC Bridge</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Msfs</td>
+                    <td style="color:var(--text2);">Msfs</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">msgpiowin32</td>
+                    <td style="color:var(--text2);">Common Driver for Buttons, DockMode and Laptop/Slate Indicator</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mshidkmdf</td>
+                    <td style="color:var(--text2);">Pass-through HID to KMDF Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mshidumdf</td>
+                    <td style="color:var(--text2);">Pass-through HID to UMDF Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">msisadrv</td>
+                    <td style="color:var(--text2);">msisadrv</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MSKSSRV</td>
+                    <td style="color:var(--text2);">Microsoft Streaming Service Proxy</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MsLldp</td>
+                    <td style="color:var(--text2);">Microsoft Link-Layer Discovery Protocol</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MSPCLOCK</td>
+                    <td style="color:var(--text2);">Microsoft Streaming Clock Proxy</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MSPQM</td>
+                    <td style="color:var(--text2);">Microsoft Streaming Quality Manager Proxy</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MsQuic</td>
+                    <td style="color:var(--text2);">MsQuic</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MsQuicPrev</td>
+                    <td style="color:var(--text2);">MSQUIC</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MsRPC</td>
+                    <td style="color:var(--text2);">MsRPC</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MsSecCore</td>
+                    <td style="color:var(--text2);">Microsoft Security Core Boot Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MsSecFlt</td>
+                    <td style="color:var(--text2);">Microsoft Security Events Component Minifilter</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MsSecWfp</td>
+                    <td style="color:var(--text2);">Microsoft Security WFP Callout Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mssmbios</td>
+                    <td style="color:var(--text2);">Microsoft System Management BIOS Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MSTEE</td>
+                    <td style="color:var(--text2);">Microsoft Streaming Tee/Sink-to-Sink Converter</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">MTConfig</td>
+                    <td style="color:var(--text2);">Microsoft Input Configuration Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Mup</td>
+                    <td style="color:var(--text2);">Mup</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">mvumis</td>
+                    <td style="color:var(--text2);">mvumis</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NativeWifiP</td>
+                    <td style="color:var(--text2);">NativeWiFi Filter</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ndfltr</td>
+                    <td style="color:var(--text2);">NetworkDirect Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NDIS</td>
+                    <td style="color:var(--text2);">NDIS System Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NdisCap</td>
+                    <td style="color:var(--text2);">Microsoft NDIS Capture</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NdisImPlatform</td>
+                    <td style="color:var(--text2);">Microsoft Network Adapter Multiplexor Protocol</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NdisTapi</td>
+                    <td style="color:var(--text2);">Remote Access NDIS TAPI Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Ndisuio</td>
+                    <td style="color:var(--text2);">NDIS Usermode I/O Protocol</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NdisVirtualBus</td>
+                    <td style="color:var(--text2);">Microsoft Virtual Network Adapter Enumerator</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NdisWan</td>
+                    <td style="color:var(--text2);">Remote Access NDIS WAN Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ndiswanlegacy</td>
+                    <td style="color:var(--text2);">Remote Access LEGACY NDIS WAN Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NDKPerf</td>
+                    <td style="color:var(--text2);">NDKPerf Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NDKPing</td>
+                    <td style="color:var(--text2);">NDKPing Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ndproxy</td>
+                    <td style="color:var(--text2);">NDIS Proxy Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Ndu</td>
+                    <td style="color:var(--text2);">Windows Network Data Usage Monitoring Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NetAdapterCx</td>
+                    <td style="color:var(--text2);">Network Adapter WDF Class Extension Library</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NetBIOS</td>
+                    <td style="color:var(--text2);">NetBIOS Interface</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NetBT</td>
+                    <td style="color:var(--text2);">NetBT</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">netvsc</td>
+                    <td style="color:var(--text2);">netvsc</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">NetworkPrivacyPolicy</td>
+                    <td style="color:var(--text2);">Microsoft Network Privacy Policy Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Npfs</td>
+                    <td style="color:var(--text2);">Npfs</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">npsvctrig</td>
+                    <td style="color:var(--text2);">Named pipe service trigger provider</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">nsiproxy</td>
+                    <td style="color:var(--text2);">NSI Proxy Service Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Ntfs</td>
+                    <td style="color:var(--text2);">Ntfs</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Null</td>
+                    <td style="color:var(--text2);">Null</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">nvdimm</td>
+                    <td style="color:var(--text2);">Microsoft NVDIMM device driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">nvmedisk</td>
+                    <td style="color:var(--text2);">Microsoft NVMe disk driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">nvraid</td>
+                    <td style="color:var(--text2);">nvraid</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">nvstor</td>
+                    <td style="color:var(--text2);">nvstor</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">P9Rdr</td>
+                    <td style="color:var(--text2);">Plan 9 Redirector Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">pango_netfilter2</td>
+                    <td style="color:var(--text2);">pango_netfilter2</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Parport</td>
+                    <td style="color:var(--text2);">Parallel port driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">partmgr</td>
+                    <td style="color:var(--text2);">Partition driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">passthruparser</td>
+                    <td style="color:var(--text2);">PassthroughParser</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">pci</td>
+                    <td style="color:var(--text2);">PCI Bus Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">pciide</td>
+                    <td style="color:var(--text2);">pciide</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">pcip</td>
+                    <td style="color:var(--text2);">PCI Proxy driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">pcmcia</td>
+                    <td style="color:var(--text2);">pcmcia</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">pcw</td>
+                    <td style="color:var(--text2);">Performance Counters for Windows Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">pdc</td>
+                    <td style="color:var(--text2);">pdc</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">PEAUTH</td>
+                    <td style="color:var(--text2);">PEAUTH</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">percsas2i</td>
+                    <td style="color:var(--text2);">percsas2i</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">percsas3i</td>
+                    <td style="color:var(--text2);">percsas3i</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">PktMon</td>
+                    <td style="color:var(--text2);">Packet Monitor Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">PktMonApi</td>
+                    <td style="color:var(--text2);">Packet Monitor Export Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">PlutonHeci</td>
+                    <td style="color:var(--text2);">Microsoft Pluton Security Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">PlutonHsp2</td>
+                    <td style="color:var(--text2);">Microsoft Pluton Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">PMDRVS</td>
+                    <td style="color:var(--text2);">PMDRVS</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">pmem</td>
+                    <td style="color:var(--text2);">Microsoft persistent memory disk driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">PNPMEM</td>
+                    <td style="color:var(--text2);">Microsoft Memory Module Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">portcfg</td>
+                    <td style="color:var(--text2);">portcfg</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">PptpMiniport</td>
+                    <td style="color:var(--text2);">WAN Miniport (PPTP)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">PRM</td>
+                    <td style="color:var(--text2);">Microsoft PRM Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Processor</td>
+                    <td style="color:var(--text2);">Processor Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Psched</td>
+                    <td style="color:var(--text2);">QoS Packet Scheduler</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">pvhdparser</td>
+                    <td style="color:var(--text2);">pvhdparser</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">pvscsi</td>
+                    <td style="color:var(--text2);">pvscsi Storage Controller Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">qcwlan</td>
+                    <td style="color:var(--text2);">Qualcomm Extensible Wireless LAN 11AX Device Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">QWAVEdrv</td>
+                    <td style="color:var(--text2);">QWAVE driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Ramdisk</td>
+                    <td style="color:var(--text2);">Windows RAM Disk Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ramparser</td>
+                    <td style="color:var(--text2);">ramparser</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">RasAcd</td>
+                    <td style="color:var(--text2);">Remote Access Auto Connection Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">RasAgileVpn</td>
+                    <td style="color:var(--text2);">WAN Miniport (IKEv2)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Rasl2tp</td>
+                    <td style="color:var(--text2);">WAN Miniport (L2TP)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">RasPppoe</td>
+                    <td style="color:var(--text2);">Remote Access PPPOE Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">RasSstp</td>
+                    <td style="color:var(--text2);">WAN Miniport (SSTP)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">rdbss</td>
+                    <td style="color:var(--text2);">Redirected Buffering Sub System</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">rdpbus</td>
+                    <td style="color:var(--text2);">Remote Desktop Device Redirector Bus Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">RDPDR</td>
+                    <td style="color:var(--text2);">Remote Desktop Device Redirector Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">rdyboost</td>
+                    <td style="color:var(--text2);">ReadyBoost</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ReFS</td>
+                    <td style="color:var(--text2);">ReFS</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ReFSv1</td>
+                    <td style="color:var(--text2);">ReFSv1</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">RFCOMM</td>
+                    <td style="color:var(--text2);">Bluetooth Device (RFCOMM Protocol TDI)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">rhproxy</td>
+                    <td style="color:var(--text2);">Resource Hub proxy driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">rspndr</td>
+                    <td style="color:var(--text2);">Link-Layer Topology Discovery Responder</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">RtlWlanu</td>
+                    <td style="color:var(--text2);">Realtek Wireless LAN 802.11n USB 2.0 Network Adapter</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">rtucx21x64</td>
+                    <td style="color:var(--text2);">Realtek USB FE/1GbE/2.5GbE/5GbE NIC Family NetAdapterCx 2.2 64-bit Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">s3cap</td>
+                    <td style="color:var(--text2);">s3cap</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">sbp2port</td>
+                    <td style="color:var(--text2);">SBP-2 Transport/Protocol Bus Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">scfilter</td>
+                    <td style="color:var(--text2);">Smart card PnP Class Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">scmbus</td>
+                    <td style="color:var(--text2);">Microsoft Storage Class Memory Bus Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">sdbus</td>
+                    <td style="color:var(--text2);">sdbus</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">SdcaHidInbox</td>
+                    <td style="color:var(--text2);">SoundWire HID Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">SdcaMfdInbox</td>
+                    <td style="color:var(--text2);">SoundWire Audio Multifunction Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">sdstor</td>
+                    <td style="color:var(--text2);">SD Storage Port Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">SerCx</td>
+                    <td style="color:var(--text2);">Serial UART Support Library</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">SerCx2</td>
+                    <td style="color:var(--text2);">Serial UART Support Library</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Serenum</td>
+                    <td style="color:var(--text2);">Serenum Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Serial</td>
+                    <td style="color:var(--text2);">Serial port driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">sermouse</td>
+                    <td style="color:var(--text2);">Serial Mouse Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">sfloppy</td>
+                    <td style="color:var(--text2);">High-Capacity Floppy Disk Drive</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">SiSRaid2</td>
+                    <td style="color:var(--text2);">SiSRaid2</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">SiSRaid4</td>
+                    <td style="color:var(--text2);">SiSRaid4</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">SmartSAMD</td>
+                    <td style="color:var(--text2);">SmartSAMD</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">smbdirect</td>
+                    <td style="color:var(--text2);">smbdirect</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">spaceparser</td>
+                    <td style="color:var(--text2);">spaceparser</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">spaceport</td>
+                    <td style="color:var(--text2);">Storage Spaces Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">SpbCx</td>
+                    <td style="color:var(--text2);">Simple Peripheral Bus Support Library</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">srv2</td>
+                    <td style="color:var(--text2);">Server SMB 2.xxx Driver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">srvnet</td>
+                    <td style="color:var(--text2);">srvnet</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">stexstor</td>
+                    <td style="color:var(--text2);">stexstor</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">storahci</td>
+                    <td style="color:var(--text2);">Microsoft Standard SATA AHCI Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">storflt</td>
+                    <td style="color:var(--text2);">Microsoft Hyper-V Storage Accelerator</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">stornvme</td>
+                    <td style="color:var(--text2);">Microsoft Standard NVM Express Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">storqosflt</td>
+                    <td style="color:var(--text2);">Storage QoS Filter Driver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">storufs</td>
+                    <td style="color:var(--text2);">Microsoft Universal Flash Storage (UFS) Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">storvsc</td>
+                    <td style="color:var(--text2);">storvsc</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">storvsp</td>
+                    <td style="color:var(--text2);">storvsp</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">swenum</td>
+                    <td style="color:var(--text2);">Software Bus Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">tap0901</td>
+                    <td style="color:var(--text2);">TAP-Windows Adapter V9</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Tcpip</td>
+                    <td style="color:var(--text2);">TCP/IP Protocol Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Tcpip6</td>
+                    <td style="color:var(--text2);">@todo.dll,-100;Microsoft IPv6 Protocol Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">tcpipreg</td>
+                    <td style="color:var(--text2);">@%SystemRoot%\System32\drivers\tcpipreg.sys,-10110,</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">tdx</td>
+                    <td style="color:var(--text2);">NetIO Legacy TDI Support Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">terminpt</td>
+                    <td style="color:var(--text2);">Microsoft Remote Desktop Input Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ThermalFilter</td>
+                    <td style="color:var(--text2);">Microsoft Thermal Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">TPM</td>
+                    <td style="color:var(--text2);">TPM</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">TPPWRIF</td>
+                    <td style="color:var(--text2);">TPPWRIF</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">TsUsbFlt</td>
+                    <td style="color:var(--text2);">Remote Desktop USB Hub Class Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">TsUsbGD</td>
+                    <td style="color:var(--text2);">Remote Desktop Generic USB Device</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">tsusbhub</td>
+                    <td style="color:var(--text2);">Remote Desktop USB Hub</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">tunnel</td>
+                    <td style="color:var(--text2);">Microsoft Tunnel Miniport Adapter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UASPStor</td>
+                    <td style="color:var(--text2);">USB Attached SCSI (UAS) Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UcmCx0101</td>
+                    <td style="color:var(--text2);">USB Connector Manager KMDF Class Extension</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UcmTcpciCx0101</td>
+                    <td style="color:var(--text2);">UCM-TCPCI KMDF Class Extension</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UcmUcsiAcpiClient</td>
+                    <td style="color:var(--text2);">UCM-UCSI ACPI Client</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UcmUcsiCx0101</td>
+                    <td style="color:var(--text2);">UCM-UCSI KMDF Class Extension</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UCPD</td>
+                    <td style="color:var(--text2);">UCPD</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Ucx01000</td>
+                    <td style="color:var(--text2);">USB Host Support Library</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UdeCx</td>
+                    <td style="color:var(--text2);">USB Device Emulation Support Library</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">udfs</td>
+                    <td style="color:var(--text2);">udfs</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UEFI</td>
+                    <td style="color:var(--text2);">Microsoft UEFI Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UevAgentDriver</td>
+                    <td style="color:var(--text2);">UevAgentDriver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Ufx01000</td>
+                    <td style="color:var(--text2);">USB Function Class Extension</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UfxChipidea</td>
+                    <td style="color:var(--text2);">USB Chipidea Controller</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ufxsynopsys</td>
+                    <td style="color:var(--text2);">USB Synopsys Controller</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">uiomap</td>
+                    <td style="color:var(--text2);">Microsoft UIO Mapper Driver Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">umbus</td>
+                    <td style="color:var(--text2);">UMBus Enumerator Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UmPass</td>
+                    <td style="color:var(--text2);">Microsoft UMPass Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UnionFS</td>
+                    <td style="color:var(--text2);">UnionFS</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UrsChipidea</td>
+                    <td style="color:var(--text2);">Chipidea USB Role-Switch Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UrsCx01000</td>
+                    <td style="color:var(--text2);">USB Role-Switch Support Library</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">UrsSynopsys</td>
+                    <td style="color:var(--text2);">Synopsys USB Role-Switch Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usb-platformdetection</td>
+                    <td style="color:var(--text2);">Usb Platform Detection Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Usb4DeviceRouter</td>
+                    <td style="color:var(--text2);">USB4 Device Router Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Usb4HostRouter</td>
+                    <td style="color:var(--text2);">USB4 Host Router Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbaudio</td>
+                    <td style="color:var(--text2);">USB Audio Driver (WDM)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbaudio2</td>
+                    <td style="color:var(--text2);">USB Audio 2.0 Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbccgp</td>
+                    <td style="color:var(--text2);">Microsoft USB Generic Parent Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbcir</td>
+                    <td style="color:var(--text2);">eHome Infrared Receiver (USBCIR)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbehci</td>
+                    <td style="color:var(--text2);">Microsoft USB 2.0 Enhanced Host Controller Miniport Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbhub</td>
+                    <td style="color:var(--text2);">Microsoft USB Standard Hub Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">USBHUB3</td>
+                    <td style="color:var(--text2);">SuperSpeed Hub</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbohci</td>
+                    <td style="color:var(--text2);">Microsoft USB Open Host Controller Miniport Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbprint</td>
+                    <td style="color:var(--text2);">Microsoft USB PRINTER Class</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbser</td>
+                    <td style="color:var(--text2);">Microsoft USB Serial Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">USBSTOR</td>
+                    <td style="color:var(--text2);">USB Mass Storage Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbuhci</td>
+                    <td style="color:var(--text2);">Microsoft USB Universal Host Controller Miniport Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">usbvideo</td>
+                    <td style="color:var(--text2);">USB Video Device (WDM)</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">USBXHCI</td>
+                    <td style="color:var(--text2);">USB xHCI Compliant Host Controller</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vdrvroot</td>
+                    <td style="color:var(--text2);">Microsoft Virtual Drive Enumerator</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">VerifierExt</td>
+                    <td style="color:var(--text2);">Driver Verifier Extension</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">VfpExt</td>
+                    <td style="color:var(--text2);">Microsoft Azure VFP Switch Filter Extension</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vhdmp</td>
+                    <td style="color:var(--text2);">vhdmp</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vhdparser</td>
+                    <td style="color:var(--text2);">vhdparser</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vhf</td>
+                    <td style="color:var(--text2);">Virtual HID Framework (VHF) Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Vid</td>
+                    <td style="color:var(--text2);">Vid</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">VirtualRender</td>
+                    <td style="color:var(--text2);">VirtualRender</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vmbus</td>
+                    <td style="color:var(--text2);">Virtual Machine Bus</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">VMBusHID</td>
+                    <td style="color:var(--text2);">VMBusHID</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vmbusproxy</td>
+                    <td style="color:var(--text2);">vmbusproxy</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vmbusr</td>
+                    <td style="color:var(--text2);">Virtual Machine Bus Provider</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vmgid</td>
+                    <td style="color:var(--text2);">Microsoft Hyper-V Guest Infrastructure Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vmsmp</td>
+                    <td style="color:var(--text2);">vmsmp</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">VMSNPXY</td>
+                    <td style="color:var(--text2);">VmSwitch NIC Proxy Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">VMSP</td>
+                    <td style="color:var(--text2);">VmSwitch Protocol Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">VmsProxy</td>
+                    <td style="color:var(--text2);">VmSwitch Proxy Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">VMSVSF</td>
+                    <td style="color:var(--text2);">VmSwitch Extensibility Filter</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">VMSVSP</td>
+                    <td style="color:var(--text2);">VmSwitch Extensibility Protocol</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">volmgr</td>
+                    <td style="color:var(--text2);">Volume Manager Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">volmgrx</td>
+                    <td style="color:var(--text2);">Dynamic Volume Manager</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">volsnap</td>
+                    <td style="color:var(--text2);">Volume Shadow Copy driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">volume</td>
+                    <td style="color:var(--text2);">Volume driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vpci</td>
+                    <td style="color:var(--text2);">Microsoft Hyper-V Virtual PCI Bus</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vpcivsp</td>
+                    <td style="color:var(--text2);">Microsoft Hyper-V PCI Server</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vsmraid</td>
+                    <td style="color:var(--text2);">vsmraid</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">VSTXRAID</td>
+                    <td style="color:var(--text2);">VIA StorX Storage RAID Controller Windows Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vwifibus</td>
+                    <td style="color:var(--text2);">Virtual Wireless Bus Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vwififlt</td>
+                    <td style="color:var(--text2);">Virtual WiFi Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">vwifimp</td>
+                    <td style="color:var(--text2);">Virtual WiFi Miniport Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WacomPen</td>
+                    <td style="color:var(--text2);">Wacom Serial Pen HID Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">wanarp</td>
+                    <td style="color:var(--text2);">Remote Access IP ARP Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">wanarpv6</td>
+                    <td style="color:var(--text2);">Remote Access IPv6 ARP Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">wcifs</td>
+                    <td style="color:var(--text2);">Windows Container Isolation</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WdBoot</td>
+                    <td style="color:var(--text2);">Microsoft Defender Antivirus Boot Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Wdf01000</td>
+                    <td style="color:var(--text2);">Kernel Mode Driver Frameworks service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WdFilter</td>
+                    <td style="color:var(--text2);">Microsoft Defender Antivirus Mini-Filter Driver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">wdiwifi</td>
+                    <td style="color:var(--text2);">WDI Driver Framework</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WdmCompanionFilter</td>
+                    <td style="color:var(--text2);">WdmCompanionFilter</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WdNisDrv</td>
+                    <td style="color:var(--text2);">Microsoft Defender Antivirus Network Inspection System Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WFPLWFS</td>
+                    <td style="color:var(--text2);">Microsoft Windows Filtering Platform</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Wificx</td>
+                    <td style="color:var(--text2);">Wifi Network Adapter Class Extension</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WIMMount</td>
+                    <td style="color:var(--text2);">WIMMount</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WinAccelCx0101</td>
+                    <td style="color:var(--text2);">Microsoft Accelerator Class Extension Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WindowsTrustedRT</td>
+                    <td style="color:var(--text2);">Windows Trusted Execution Environment Class Extension</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WindowsTrustedRTProxy</td>
+                    <td style="color:var(--text2);">Microsoft Windows Trusted Runtime Secure Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">wini3ctarget</td>
+                    <td style="color:var(--text2);">Generic driver for I3C Target Devices</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WinMad</td>
+                    <td style="color:var(--text2);">WinMad Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WinNat</td>
+                    <td style="color:var(--text2);">Windows NAT Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">wintun</td>
+                    <td style="color:var(--text2);">wintun</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WINUSB</td>
+                    <td style="color:var(--text2);">WinUsb Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WinVerbs</td>
+                    <td style="color:var(--text2);">WinVerbs Service</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WireGuard</td>
+                    <td style="color:var(--text2);">WireGuard</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WmiAcpi</td>
+                    <td style="color:var(--text2);">Microsoft Windows Management Interface for ACPI</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">Wof</td>
+                    <td style="color:var(--text2);">Windows Overlay File System Filter Driver</td>
+                    <td><span class="badge badge-blue">File System </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WpdUpFltr</td>
+                    <td style="color:var(--text2);">WPD Upper Class Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">ws2ifsl</td>
+                    <td style="color:var(--text2);">Winsock IFS Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">wtd</td>
+                    <td style="color:var(--text2);">wtd</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WudfPf</td>
+                    <td style="color:var(--text2);">User Mode Driver Frameworks Platform Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WUDFRd</td>
+                    <td style="color:var(--text2);">Windows Driver Foundation - User-mode Driver Framework Reflector</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WUDFWpdFs</td>
+                    <td style="color:var(--text2);">WPD File System driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">WUDFWpdMtp</td>
+                    <td style="color:var(--text2);">WUDFWpdMtp</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">xboxgip</td>
+                    <td style="color:var(--text2);">Xbox Game Input Protocol Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr>
+                <tr>
+                    <td class="proc-name">xinputhid</td>
+                    <td style="color:var(--text2);">XINPUT HID Filter Driver</td>
+                    <td><span class="badge badge-blue">Kernel </span></td>
+                    <td><span style="color:#ef4444;font-weight:600;">Stopped</span></td>
+                </tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+  <!-- MAINTENANCE -->
+  <section id="maintenance">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#2a1e1e;color:#f87171;">🗑</div>
+          <span class="card-title">Junk File Scan</span>
+        </div>
+        <div class="card-body">
+          <div class="junk-grid">
+            <div class="junk-tile"><div class="junk-num">16,540</div><div class="junk-label">Junk Files</div></div>
+            <div class="junk-tile"><div class="junk-num">1087.36</div><div class="junk-label">MB on Disk</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#1e2a2a;color:#2dd4bf;">🔑</div>
+          <span class="card-title">Windows Activation</span>
+        </div>
+        <div class="card-body"><div class="code-block">Windows(R), Professional edition:
+    The machine is permanently activated.</div></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">Advanced System Report &middot; Saturday, May 16 2026 at 07:36:27 &middot; Gaurav</footer>
+
+<script>
+Chart.defaults.color = '#8a95b0';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+Chart.defaults.font.family = "Inter,-apple-system,sans-serif";
+Chart.defaults.font.size = 12;
+
+// 1 — CPU per-core bar
+(function(){
+  const labels = ["Core 0", "Core 1", "Core 2", "Core 3", "Core 4", "Core 5", "Core 6", "Core 7", "Core 8", "Core 9", "Core 10", "Core 11", "Core 12", "Core 13", "Core 14", "Core 15"];
+  const data   = [0.0, 1.6, 15.2, 4.6, 0.0, 0.0, 1.6, 12.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+  const colors = data.map(v => v > 80 ? '#ef4444' : v > 60 ? '#f59e0b' : '#22c55e');
+  new Chart(document.getElementById('cpuChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'CPU %', data, backgroundColor: colors, borderRadius: 4, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.parsed.y.toFixed(1) + '%' } } },
+      scales: {
+        y: { min:0, max:100, ticks: { callback: v => v+'%' }, grid: { color:'rgba(255,255,255,0.05)' } },
+        x: { grid: { display:false } }
+      }
+    }
+  });
+})();
+
+// 2 — RAM donut
+(function(){
+  new Chart(document.getElementById('ramChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Used','Available','Cached/Other'],
+      datasets: [{ data: [13.84,16.93,0.0], backgroundColor: ['#a78bfa','#22c55e','#3b73e0'], borderColor: '#161b27', borderWidth: 3, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '70%',
+      plugins: { legend: { display:false }, tooltip: { callbacks: { label: c => ' ' + c.parsed.toFixed(2) + ' GB' } } }
+    }
+  });
+})();
+
+// 3 — Disk grouped bar
+(function(){
+  const labels = ["C:", "D:", "E:"];
+  const used   = [154.85, 4.82, 16.64];
+  const free   = [20.96, 193.55, 85.15];
+  new Chart(document.getElementById('diskChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Used', data: used, backgroundColor: '#4f8ef7', borderRadius: 4, borderSkipped: false },
+        { label: 'Free', data: free, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 4, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'top', labels: { boxWidth:12, padding:16, usePointStyle:true, pointStyle:'circle' } },
+        tooltip: { callbacks: { label: c => ' ' + c.parsed.y.toFixed(2) + ' GB' } }
+      },
+      scales: {
+        x: { grid: { display:false } },
+        y: { ticks: { callback: v => v + ' GB' }, grid: { color:'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+})();
+
+// 4 — Top 10 processes horizontal bar
+(function(){
+  const labels = ["pyrefly.exe", "Antigravity.exe", "Antigravity.exe", "chrome.exe", "PhoneExperienceHost.ex", "Antigravity.exe", "explorer.exe", "Antigravity.exe", "chrome.exe", "Antigravity.exe"];
+  const data   = [2.65, 2.38, 1.62, 1.4, 1.21, 1.06, 1.04, 0.93, 0.92, 0.87];
+  new Chart(document.getElementById('procChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Memory %', data, backgroundColor: 'rgba(79,142,247,0.7)', borderColor: '#4f8ef7', borderWidth: 1, borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:false }, tooltip: { callbacks: { label: c => ' ' + c.parsed.x.toFixed(2) + '%' } } },
+      scales: {
+        x: { min:0, ticks: { callback: v => v+'%' }, grid: { color:'rgba(255,255,255,0.05)' } },
+        y: { grid: { display:false } }
+      }
+    }
+  });
+})();
+
+// Sticky nav scroll tracking
+const tabs = document.querySelectorAll('.nav-tab');
+const secs = document.querySelectorAll('section[id]');
+const obs  = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) tabs.forEach(t => t.classList.toggle('active', t.getAttribute('href') === '#' + e.target.id));
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+secs.forEach(s => obs.observe(s));
+tabs.forEach(t => t.addEventListener('click', e => {
+  e.preventDefault();
+  document.querySelector(t.getAttribute('href'))?.scrollIntoView({ behavior:'smooth' });
+}));
+</script>
+</body>
+</html>
