@@ -1,5 +1,6 @@
 import typer
-from toolbook.tReports import SystemReport, webReport
+from toolbook.tReports import SystemReport, webReport, codeReport
+from pathlib import Path
 
 app = typer.Typer()
 
@@ -30,5 +31,24 @@ def webscan(
     
     typer.secho(
         "Web report generated successfully",
+        fg=typer.colors.GREEN
+    )
+
+@app.command()
+def codescan(
+    path: str = typer.Argument(..., help="Path to the repository to analyse")
+):
+    """
+    Generate professional Code Quality Report for a Python repository.
+    """
+    downloads_dir = str(Path.home() / "Downloads" / "CodeQualityReport")
+    
+    codeReport(
+        repo_path=path,
+        output_dir=downloads_dir
+    )
+    
+    typer.secho(
+        f"Code report generated successfully in {downloads_dir}",
         fg=typer.colors.GREEN
     )
