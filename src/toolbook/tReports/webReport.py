@@ -47,6 +47,7 @@ from bs4 import BeautifulSoup
 
 # ── optional deps ──────────────────────────────────────────────────────────────
 try:
+    # pyrefly: ignore [missing-import]
     import dns.resolver as dns_resolver
     HAS_DNS = True
 except ImportError:
@@ -1520,7 +1521,7 @@ def webReport(url: str, out_dir: str = None, delay: int = 0,open_report:bool=Tru
 
     print(f"\n✅  Report ready → {index_path.resolve()}")
     print(f"📊  Overall score : {summary['overall_score']}/100  ({summary['risk_level']} risk)")
-    print(f"🔍  Domain        : {summary['domain']}")
+    print(f"🔍  Domain        : https://{summary['domain']}")
     print(f"⚠️   Issues found  : {summary['issues_total']}")
     
     if open_report:
