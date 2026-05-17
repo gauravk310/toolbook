@@ -1,5 +1,5 @@
 import typer
-from toolbook.tReports import SystemReport, webReport, codeReport
+from toolbook.tReports import SystemReport, webReport, codeReport, gitRepoReport, gitUserReport
 from pathlib import Path
 
 app = typer.Typer()
@@ -50,5 +50,59 @@ def codescan(
     
     typer.secho(
         f"Code report generated successfully in {downloads_dir}",
+        fg=typer.colors.GREEN
+    )
+
+@app.command("git-repo")
+def git_repo(
+    repo_url: str = typer.Argument(..., help="GitHub repository URL"),
+    token: str = typer.Option(None, help="GitHub PAT (optional)"),
+    output_dir: str = typer.Option(None, help="Output directory"),
+    verbose: bool = typer.Option(False, "--verbose", help="Enable verbose logging")
+):
+    """
+    Generate professional Intelligence Report for a GitHub repository.
+    """
+    from toolbook.utils import get_token
+    token = token or get_token("GITHUB_TOKEN")
+    
+    if output_dir is None:
+        output_dir = str(Path.home() / "Downloads" / "GitRepoReport")
+
+    path, summary = gitRepoReport(
+        repo_url=repo_url,
+        token=token,
+        output_dir=output_dir,
+        verbose=verbose
+    )
+    
+    typer.secho(
+        f"Git Repo report generated successfully in {path}",
+        fg=typer.colors.GREEN
+    )
+
+@app.command("git-user")
+def git_user(
+    username: str = typer.Argument(..., help="GitHub username"),
+    token: str = typer.Option(None, help="GitHub PAT (optional)"),
+    output_dir: str = typer.Option(None, help="Output directory")
+):
+    """
+    Generate professional Intelligence Report for a GitHub user.
+    """
+    from toolbook.utils import get_token
+    token = token or get_token("GITHUB_TOKEN")
+    
+    if output_dir is None:
+        output_dir = str(Path.home() / "Downloads" / "GitUserReport")
+
+    path, summary = gitUserReport(
+        username=username,
+        token=token,
+        output_dir=output_dir
+    )
+    
+    typer.secho(
+        f"Git User report generated successfully in {path}",
         fg=typer.colors.GREEN
     )
