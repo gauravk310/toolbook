@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import typer
 from toolbook.commands.reports import app as reports_app
+from toolbook.commands.sys import app as sys_app
 
 # Load environment variables from ~/.toolbook/.env
 env_file = Path.home() / ".toolbook" / ".env"
@@ -18,6 +19,11 @@ app = typer.Typer()
 app.add_typer(
     reports_app,
     name="report"
+)
+
+app.add_typer(
+    sys_app,
+    name="sys"
 )
 
 @app.command("set-token")
