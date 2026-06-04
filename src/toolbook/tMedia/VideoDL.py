@@ -40,6 +40,7 @@ def YT(url: str, path: str | None = None) -> str:
     ydl_opts = {
         "outtmpl": os.path.join(write_path, "%(title)s.%(ext)s"),
         "format": "best",
+        "cookiesfrombrowser": ("chrome",),
     }
 
     try:
