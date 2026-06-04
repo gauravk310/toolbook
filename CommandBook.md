@@ -144,3 +144,145 @@ toolbook report git-user torvalds --token ghp_abc123xyz456
 # Custom output directory
 toolbook report git-user torvalds --output-dir C:\Reports\Users
 ```
+
+---
+
+## System Info
+
+All `sys info-*` commands accept a `--json` flag to output raw JSON instead of the formatted view.
+
+---
+
+### `sys info`
+Show complete system information — OS, CPU, memory, disk, battery, network, and uptime — in one view.
+
+```bash
+toolbook sys info [--json]
+```
+
+**Example:**
+```bash
+toolbook sys info
+toolbook sys info --json
+```
+
+---
+
+### `sys info-system`
+Show OS and machine details (platform, node name, release, version, architecture, processor).
+
+```bash
+toolbook sys info-system [--json]
+```
+
+**Example:**
+```bash
+toolbook sys info-system
+```
+
+---
+
+### `sys info-cpu`
+Show CPU core count, usage percentage, per-core usage bars, clock frequencies, and load average.
+
+```bash
+toolbook sys info-cpu [--json]
+```
+
+**Example:**
+```bash
+toolbook sys info-cpu
+```
+
+---
+
+### `sys info-memory`
+Show total, available, and used RAM with usage percentage.
+
+```bash
+toolbook sys info-memory [--json]
+```
+
+**Example:**
+```bash
+toolbook sys info-memory
+```
+
+---
+
+### `sys info-disk`
+Show all disk partitions with file system type, total/used/free space, and usage percentage.
+
+```bash
+toolbook sys info-disk [--json]
+```
+
+**Example:**
+```bash
+toolbook sys info-disk
+```
+
+---
+
+### `sys info-battery`
+Show battery charge percentage, charging state, and estimated time remaining.
+
+```bash
+toolbook sys info-battery [--json]
+```
+
+**Example:**
+```bash
+toolbook sys info-battery
+```
+
+---
+
+### `sys info-network`
+Show hostname and primary IP address.
+
+```bash
+toolbook sys info-network [--json]
+```
+
+**Example:**
+```bash
+toolbook sys info-network
+```
+
+---
+
+### `sys info-uptime`
+Show the boot timestamp and time elapsed since last power-on in seconds, minutes, hours, and a combined `Xd XXh XXm XXs` format.
+
+```bash
+toolbook sys info-uptime [--json]
+```
+
+**Example:**
+```bash
+toolbook sys info-uptime
+# Booted At    2026-05-30 06:23:55
+# Seconds      440,684 s
+# Minutes      7,344.73 min
+# Hours        122.41 hr
+# Total Uptime 5d 02h 24m 44s
+```
+
+---
+
+### `sys organize-files`
+Organise files in a folder into typed sub-folders: Images, Videos, Documents, PDFs, Music, Archives, Others.
+
+```bash
+toolbook sys organize-files <FOLDER_PATH>
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `FOLDER_PATH` | Yes | Path to the folder to organise |
+
+**Example:**
+```bash
+toolbook sys organize-files C:\Users\me\Downloads
+```

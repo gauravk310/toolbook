@@ -222,7 +222,6 @@ dependencies = [
 "tomli==2.4.1",
 "tomli_w==1.2.0",
 "tomlkit==0.15.0",
-"-e git+https://github.com/gauravk310/toolbook.git@f789acef6251be0a48a22b449b0e4314d23a5752#egg=toolbook",
 "tqdm==4.67.3",
 "typer==0.23.1",
 "typing-inspection==0.4.2",
