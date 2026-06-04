@@ -223,7 +223,6 @@ dependencies = [
 "tomli_w==1.2.0",
 "tomlkit==0.15.0",
 "tqdm==4.67.3",
-"yt-dlp==2025.5.22",
 "typer==0.23.1",
 "typing-inspection==0.4.2",
 "typing_extensions==4.15.0",
