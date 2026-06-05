@@ -1,9 +1,7 @@
-from .tPDF import PDFReader, PDFWriter, PDFMerge, PDFSplit, PDFWatermark, PDFInfo, PDFRotate
+from .PDF import PDFMerger, PDFSplit, PDFWatermark, PDFInfo, PDFRotate
 
 __all__ = [
-    "PDFReader",
-    "PDFWriter",
-    "PDFMerge",
+    "PDFMerger",
     "PDFSplit",
     "PDFWatermark",
     "PDFInfo",

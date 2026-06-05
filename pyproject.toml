@@ -116,6 +116,7 @@ dependencies = [
 "pylint==4.0.5",
 "PyNaCl==1.6.2",
 "pyparsing==3.3.2",
+"pypdf==5.6.0",
 "pytest==9.0.3",
 "python-dateutil==2.9.0.post0",
 "face==26.0.0",
