@@ -369,13 +369,15 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
     risk_level = (
         "Critical"
         if security_score < 40
-        else "High"
-        if security_score < 60
-        else "Medium"
-        if security_score < 75
-        else "Low"
-        if security_score < 90
-        else "Minimal"
+        else (
+            "High"
+            if security_score < 60
+            else (
+                "Medium"
+                if security_score < 75
+                else "Low" if security_score < 90 else "Minimal"
+            )
+        )
     )
 
     # ── 3. SEO ─────────────────────────────────────────────────────────────────
@@ -903,9 +905,7 @@ def build_summary(d: dict) -> str:
     )
 
     open_h, close_h = _section_shell("Summary", css, CHARTJS)
-    return (
-        open_h
-        + f"""
+    return open_h + f"""
 <div class="page-header">
   <div class="page-header-icon">📊</div>
   <div><h1>Executive Summary</h1><div class="sub">{_esc(d["domain"])} &mdash; {_esc(d["scan_time"])}</div></div>
@@ -973,9 +973,7 @@ new Chart(document.getElementById('radarChart'),{{
   }}}},plugins:{{legend:{{display:false}}}}}}
 }});
 </script>
-"""
-        + close_h
-    )
+""" + close_h
 
 
 def build_siteinfo(d: dict) -> str:
@@ -995,9 +993,7 @@ def build_siteinfo(d: dict) -> str:
         for k, v in sorted(d["headers"].items())
     )
     open_h, close_h = _section_shell("Site Information", css)
-    return (
-        open_h
-        + f"""
+    return open_h + f"""
 <div class="page-header">
   <div class="page-header-icon">🌐</div>
   <div><h1>Site Information</h1><div class="sub">General metadata &amp; server configuration</div></div>
@@ -1043,9 +1039,7 @@ def build_siteinfo(d: dict) -> str:
     <tbody>{hdr_rows}</tbody></table>
   </div></div>
 </div>
-"""
-        + close_h
-    )
+""" + close_h
 
 
 def build_security(d: dict) -> str:
@@ -1141,9 +1135,7 @@ def build_security(d: dict) -> str:
         "Medium": "alert-medium",
     }.get(d["risk_level"], "alert-good")
     open_h, close_h = _section_shell("Security", css)
-    return (
-        open_h
-        + f"""
+    return open_h + f"""
 <div class="page-header">
   <div class="page-header-icon">🔒</div>
   <div><h1>Security Analysis</h1><div class="sub">{len(issues)} issues &bull; {d["risk_level"]} Risk</div></div>
@@ -1189,9 +1181,7 @@ def build_security(d: dict) -> str:
   <table><thead><tr><th>Name</th><th>Secure</th><th>HttpOnly</th><th>SameSite</th></tr></thead>
   <tbody>{ck_rows}</tbody></table>
 </div></div></div>
-"""
-        + close_h
-    )
+""" + close_h
 
 
 def build_seo(d: dict) -> str:
@@ -1231,9 +1221,7 @@ def build_seo(d: dict) -> str:
 .cmeter{margin-top:8px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--muted)}
 """
     open_h, close_h = _section_shell("SEO", css)
-    return (
-        open_h
-        + f"""
+    return open_h + f"""
 <div class="page-header">
   <div class="page-header-icon">🔎</div>
   <div><h1>SEO Analysis</h1><div class="sub">{len(issues)} issues found</div></div>
@@ -1298,9 +1286,7 @@ def build_seo(d: dict) -> str:
 
 <div class="section-label">Issues</div>
 <div class="card"><div class="card-body"><ul class="issue-list">{issue_li}</ul></div></div>
-"""
-        + close_h
-    )
+""" + close_h
 
 
 def build_performance(d: dict) -> str:
@@ -1323,9 +1309,7 @@ def build_performance(d: dict) -> str:
 .wtime{width:60px;text-align:right;color:var(--text)}
 """
     open_h, close_h = _section_shell("Performance", css, CHARTJS)
-    return (
-        open_h
-        + f"""
+    return open_h + f"""
 <div class="page-header">
   <div class="page-header-icon">⚡</div>
   <div><h1>Performance Analysis</h1><div class="sub">{len(issues)} issue(s) found</div></div>
@@ -1370,9 +1354,7 @@ def build_performance(d: dict) -> str:
 
 <div class="section-label">Issues</div>
 <div class="card"><div class="card-body"><ul class="issue-list">{issue_li}</ul></div></div>
-"""
-        + close_h
-    )
+""" + close_h
 
 
 def build_accessibility(d: dict) -> str:
@@ -1405,9 +1387,7 @@ def build_accessibility(d: dict) -> str:
 .hdr-check.fail{border-color:rgba(255,61,87,.3);background:rgba(255,61,87,.05)}
 """
     open_h, close_h = _section_shell("Accessibility", css)
-    return (
-        open_h
-        + f"""
+    return open_h + f"""
 <div class="page-header">
   <div class="page-header-icon">♿</div>
   <div><h1>Accessibility</h1><div class="sub">{len(issues)} issues found</div></div>
@@ -1432,9 +1412,7 @@ def build_accessibility(d: dict) -> str:
 
 <div class="section-label">Issues</div>
 <div class="card"><div class="card-body"><ul class="issue-list">{issue_li}</ul></div></div>
-"""
-        + close_h
-    )
+""" + close_h
 
 
 def build_technologies(d: dict) -> str:
@@ -1471,9 +1449,7 @@ def build_technologies(d: dict) -> str:
 .detect-src{color:var(--accent2)}
 """
     open_h, close_h = _section_shell("Technologies", css)
-    return (
-        open_h
-        + f"""
+    return open_h + f"""
 <div class="page-header">
   <div class="page-header-icon">🧩</div>
   <div><h1>Technology Stack</h1><div class="sub">{
@@ -1497,9 +1473,7 @@ def build_technologies(d: dict) -> str:
         }
   </tbody></table>
 </div></div></div>
-"""
-        + close_h
-    )
+""" + close_h
 
 
 def build_dns(d: dict) -> str:
@@ -1527,9 +1501,7 @@ def build_dns(d: dict) -> str:
 .dns-type.cname{background:rgba(255,100,50,.1);color:#ff7043;border-color:rgba(255,100,50,.25)}
 """
     open_h, close_h = _section_shell("DNS & Infrastructure", css)
-    return (
-        open_h
-        + f"""
+    return open_h + f"""
 <div class="page-header">
   <div class="page-header-icon">🌍</div>
   <div><h1>DNS &amp; Infrastructure</h1><div class="sub">Network configuration &amp; hosting details</div></div>
@@ -1554,9 +1526,7 @@ def build_dns(d: dict) -> str:
 
 <div class="section-label">DNS Records</div>
 <div class="card"><div class="card-body" style="padding:0">{dns_table}</div></div>
-"""
-        + close_h
-    )
+""" + close_h
 
 
 def build_screenshots(d: dict) -> str:
@@ -1575,9 +1545,7 @@ def build_screenshots(d: dict) -> str:
   <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6">Install Playwright to enable:<br><br>pip install playwright Pillow<br>playwright install chromium</div>
 </div>"""
     open_h, close_h = _section_shell("Screenshots")
-    return (
-        open_h
-        + f"""
+    return open_h + f"""
 <div class="page-header">
   <div class="page-header-icon">📸</div>
   <div><h1>Screenshots</h1><div class="sub">Visual rendering — desktop &amp; mobile</div></div>
@@ -1595,9 +1563,7 @@ def build_screenshots(d: dict) -> str:
   <div class="info-row"><div class="info-key">Format</div><div class="info-val">PNG (embedded base64)</div></div>
   <div class="info-row"><div class="info-key">Playwright</div><div class="info-val">{_bool_badge(HAS_PLAYWRIGHT)}</div></div>
 </div></div>
-"""
-        + close_h
-    )
+""" + close_h
 
 
 def build_charts(d: dict) -> str:
@@ -1651,9 +1617,7 @@ def build_charts(d: dict) -> str:
         score_bars += f'<div class="score-line"><div class="sname">{name}</div><div class="bwrap"><div class="bfill" style="width:{score}%;background:{cc}">{score}</div></div><div class="bnum" style="color:{cc}">{score}</div></div>'
 
     open_h, close_h = _section_shell("Charts", css, CHARTJS)
-    return (
-        open_h
-        + f"""
+    return open_h + f"""
 <div class="page-header">
   <div class="page-header-icon">📈</div>
   <div><h1>Score Charts</h1><div class="sub">Visual overview of all dimensions</div></div>
@@ -1685,9 +1649,7 @@ const sevCounts=[{{}},{{}},{{}},{{}}];
 new Chart(document.getElementById('sevChart'),{{type:'doughnut',data:{{labels:sevLabels,datasets:[{{data:[0,cd.issues[0],cd.issues[1]+cd.issues[3],cd.issues[2]],backgroundColor:['rgba(220,38,38,.7)','rgba(255,61,87,.7)','rgba(255,171,0,.7)','rgba(0,212,255,.7)'],borderColor:['#dc2626','#ff3d57','#ffab00','#00d4ff'],borderWidth:1}}]}},options:{{responsive:true,cutout:'55%',plugins:{{legend:{{position:'right',labels:{{color:'#d4dfe8',font:F,padding:10}}}}}}}}}});
 new Chart(document.getElementById('secChart'),{{type:'bar',data:{{labels:['HTTPS','HSTS','CSP','X-Frame','Referrer','X-CTO','Perms','XSS'],datasets:[{{data:cd.sec_headers,backgroundColor:cd.sec_headers.map(v=>v?'rgba(0,230,118,.6)':'rgba(255,61,87,.4)'),borderColor:cd.sec_headers.map(v=>v?'#00e676':'#ff3d57'),borderWidth:1,borderRadius:4}}]}},options:{{responsive:true,indexAxis:'y',plugins:{{legend:{{display:false}}}},scales:{{x:{{grid:{{color:G}},ticks:{{color:T,font:F}},max:1}},y:{{grid:{{color:G}},ticks:{{color:T,font:{{...F,size:10}}}}}}}}  }}}});
 </script>
-"""
-        + close_h
-    )
+""" + close_h
 
 
 # ══════════════════════════════════════════════════════════════════════════════

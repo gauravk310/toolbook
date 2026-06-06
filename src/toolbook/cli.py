@@ -39,6 +39,7 @@ def main(
 ) -> None:
     """Toolbook — document processing, system diagnostics, and reporting toolkit."""
 
+
 app.add_typer(reports_app, name="report")
 
 app.add_typer(sys_app, name="sys")

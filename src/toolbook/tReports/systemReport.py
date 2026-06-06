@@ -133,9 +133,11 @@ def SystemReport(output_path="advanced_system_report.html", open_report=False):
         time_left = (
             "Charging"
             if battery.power_plugged
-            else f"{battery.secsleft // 3600}h {(battery.secsleft % 3600) // 60}m"
-            if battery.secsleft != psutil.POWER_TIME_UNLIMITED
-            else "Calculating..."
+            else (
+                f"{battery.secsleft // 3600}h {(battery.secsleft % 3600) // 60}m"
+                if battery.secsleft != psutil.POWER_TIME_UNLIMITED
+                else "Calculating..."
+            )
         )
         live_battery_html = f"""
         <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
@@ -218,9 +220,7 @@ def SystemReport(output_path="advanced_system_report.html", open_report=False):
     _health_color = (
         "#ef4444"
         if battery_health < 60
-        else "#f59e0b"
-        if battery_health < 75
-        else "#22c55e"
+        else "#f59e0b" if battery_health < 75 else "#22c55e"
     )
     _condition_color = {
         "Excellent": "#22c55e",
@@ -461,9 +461,7 @@ def SystemReport(output_path="advanced_system_report.html", open_report=False):
     health_color = (
         "#ef4444"
         if health_score < 50
-        else "#f59e0b"
-        if health_score < 75
-        else "#22c55e"
+        else "#f59e0b" if health_score < 75 else "#22c55e"
     )
     health_label = (
         "Poor" if health_score < 50 else "Fair" if health_score < 75 else "Good"

@@ -1,7 +1,6 @@
 import os
 import shutil
 
-
 FILE_TYPES = {
     "Images": [".jpg", ".jpeg", ".png", ".gif"],
     "Videos": [".mp4", ".mkv", ".avi"],
