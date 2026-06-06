@@ -30,6 +30,7 @@ def PDFMerger(pdfs_dir: str, output_dir: str, log=None) -> str:
     -----------
     toolbook doc pdf merge <pdf-dir> <output-dir>
     """
+
     def _log(msg: str) -> None:
         if log is not None:
             log(msg)
@@ -42,7 +43,8 @@ def PDFMerger(pdfs_dir: str, output_dir: str, log=None) -> str:
 
     # Collect all PDFs in the directory (sorted for deterministic order)
     pdfs: list[str] = sorted(
-        str(p) for p in Path(pdfs_dir).iterdir()
+        str(p)
+        for p in Path(pdfs_dir).iterdir()
         if p.is_file() and p.suffix.lower() == ".pdf"
     )
 
@@ -62,7 +64,9 @@ def PDFMerger(pdfs_dir: str, output_dir: str, log=None) -> str:
             for page in reader.pages:
                 writer.add_page(page)
             total_pages += pages
-            _log(f"  [{i + 1}/{len(pdfs)}] {Path(pdf).name}  [{pages} page{'s' if pages > 1 else ''}]")
+            _log(
+                f"  [{i + 1}/{len(pdfs)}] {Path(pdf).name}  [{pages} page{'s' if pages > 1 else ''}]"
+            )
 
         os.makedirs(output_dir, exist_ok=True)
 
@@ -113,6 +117,7 @@ def PDFSplit(
     -----------
     toolbook doc pdf split <pdf-file> [output-path]
     """
+
     def _log(msg: str) -> None:
         if log is not None:
             log(msg)
@@ -195,6 +200,7 @@ def PDFIMGExtractor(
     -----------
     toolbook doc pdf extract-img <pdf-file> [output-path]
     """
+
     def _log(msg: str) -> None:
         if log is not None:
             log(msg)
@@ -234,7 +240,9 @@ def PDFIMGExtractor(
         image_count = 0
         for page_index in range(total_pages):
             page_images = doc.get_page_images(page_index)
-            _log(f"  Page {page_index + 1}/{total_pages} — {len(page_images)} image(s) found")
+            _log(
+                f"  Page {page_index + 1}/{total_pages} — {len(page_images)} image(s) found"
+            )
 
             for img in page_images:
                 xref = img[0]
@@ -289,6 +297,7 @@ def DocxToPDF(
     -----------
     toolbook doc pdf convert-pdf <docx-file> [output-path] [--open]
     """
+
     def _log(msg: str) -> None:
         if log is not None:
             log(msg)
@@ -360,6 +369,7 @@ def PDFToDocx(
     -----------
     toolbook doc pdf convert-docx <pdf-file> [output-path] [--open]
     """
+
     def _log(msg: str) -> None:
         if log is not None:
             log(msg)

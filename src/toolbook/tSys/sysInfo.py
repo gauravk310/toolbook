@@ -26,13 +26,13 @@ class SysInfo:
 
     def __init__(self) -> None:
         self._data = {
-            "system":  self._collect_system(),
-            "cpu":     self._collect_cpu(),
-            "memory":  self._collect_memory(),
-            "disk":    self._collect_disk(),
+            "system": self._collect_system(),
+            "cpu": self._collect_cpu(),
+            "memory": self._collect_memory(),
+            "disk": self._collect_disk(),
             "battery": self._collect_battery(),
             "network": self._collect_network(),
-            "uptime":  self._collect_uptime(),
+            "uptime": self._collect_uptime(),
         }
 
     # ------------------------------------------------------------------
@@ -78,11 +78,11 @@ class SysInfo:
     @staticmethod
     def _collect_system() -> dict:
         return {
-            "system":    platform.system(),
+            "system": platform.system(),
             "node_name": platform.node(),
-            "release":   platform.release(),
-            "version":   platform.version(),
-            "machine":   platform.machine(),
+            "release": platform.release(),
+            "version": platform.version(),
+            "machine": platform.machine(),
             "processor": platform.processor(),
         }
 
@@ -97,23 +97,23 @@ class SysInfo:
             load_avg = None
 
         return {
-            "physical_cores":    psutil.cpu_count(logical=False),
-            "total_cores":       psutil.cpu_count(logical=True),
+            "physical_cores": psutil.cpu_count(logical=False),
+            "total_cores": psutil.cpu_count(logical=True),
             "cpu_usage_percent": psutil.cpu_percent(interval=1),
             "cpu_per_core_usage": psutil.cpu_percent(percpu=True),
-            "cpu_frequency_mhz":     round(freq.current, 2) if freq else None,
-            "cpu_max_frequency_mhz": round(freq.max, 2)     if freq else None,
-            "cpu_min_frequency_mhz": round(freq.min, 2)     if freq else None,
-            "cpu_load_average":  load_avg,
+            "cpu_frequency_mhz": round(freq.current, 2) if freq else None,
+            "cpu_max_frequency_mhz": round(freq.max, 2) if freq else None,
+            "cpu_min_frequency_mhz": round(freq.min, 2) if freq else None,
+            "cpu_load_average": load_avg,
         }
 
     @staticmethod
     def _collect_memory() -> dict:
         mem = psutil.virtual_memory()
         return {
-            "total_ram_gb":     round(mem.total     / (1024 ** 3), 2),
-            "available_ram_gb": round(mem.available / (1024 ** 3), 2),
-            "used_ram_gb":      round(mem.used      / (1024 ** 3), 2),
+            "total_ram_gb": round(mem.total / (1024**3), 2),
+            "available_ram_gb": round(mem.available / (1024**3), 2),
+            "used_ram_gb": round(mem.used / (1024**3), 2),
             "ram_usage_percent": mem.percent,
         }
 
@@ -123,14 +123,16 @@ class SysInfo:
         for partition in psutil.disk_partitions():
             try:
                 usage = psutil.disk_usage(partition.mountpoint)
-                disks.append({
-                    "drive":          partition.device,
-                    "file_system":    partition.fstype,
-                    "total_space_gb": round(usage.total / (1024 ** 3), 2),
-                    "used_space_gb":  round(usage.used  / (1024 ** 3), 2),
-                    "free_space_gb":  round(usage.free  / (1024 ** 3), 2),
-                    "usage_percent":  usage.percent,
-                })
+                disks.append(
+                    {
+                        "drive": partition.device,
+                        "file_system": partition.fstype,
+                        "total_space_gb": round(usage.total / (1024**3), 2),
+                        "used_space_gb": round(usage.used / (1024**3), 2),
+                        "free_space_gb": round(usage.free / (1024**3), 2),
+                        "usage_percent": usage.percent,
+                    }
+                )
             except PermissionError:
                 continue
         return disks
@@ -141,15 +143,15 @@ class SysInfo:
         if battery:
             return {
                 "battery_percent": battery.percent,
-                "charging":        battery.power_plugged,
-                "seconds_left":    battery.secsleft,
+                "charging": battery.power_plugged,
+                "seconds_left": battery.secsleft,
             }
         return {"battery": "No battery detected"}
 
     @staticmethod
     def _collect_network() -> dict:
         return {
-            "hostname":   socket.gethostname(),
+            "hostname": socket.gethostname(),
             "ip_address": socket.gethostbyname(socket.gethostname()),
         }
 
@@ -158,15 +160,15 @@ class SysInfo:
         boot_ts = psutil.boot_time()
         uptime_seconds = int(time.time() - boot_ts)
 
-        days    = uptime_seconds // 86400
-        hours   = (uptime_seconds % 86400) // 3600
+        days = uptime_seconds // 86400
+        hours = (uptime_seconds % 86400) // 3600
         minutes = (uptime_seconds % 3600) // 60
         seconds = uptime_seconds % 60
 
         return {
-            "boot_time":      datetime.fromtimestamp(boot_ts).strftime("%Y-%m-%d %H:%M:%S"),
+            "boot_time": datetime.fromtimestamp(boot_ts).strftime("%Y-%m-%d %H:%M:%S"),
             "uptime_seconds": uptime_seconds,
             "uptime_minutes": round(uptime_seconds / 60, 2),
-            "uptime_hours":   round(uptime_seconds / 3600, 2),
-            "uptime":         f"{days}d {hours:02}h {minutes:02}m {seconds:02}s",
+            "uptime_hours": round(uptime_seconds / 3600, 2),
+            "uptime": f"{days}d {hours:02}h {minutes:02}m {seconds:02}s",
         }

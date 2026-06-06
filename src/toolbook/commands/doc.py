@@ -16,9 +16,15 @@ def _open_path(path: str) -> None:
 
 @pdf_app.command("merge")
 def pdf_merge(
-    pdfs_dir: str = typer.Argument(..., help="Directory containing the PDF files to merge"),
-    output_dir: str = typer.Argument(..., help="Directory where the merged PDF will be saved"),
-    open_doc: bool = typer.Option(False, "--open", help="Open the merged PDF after saving"),
+    pdfs_dir: str = typer.Argument(
+        ..., help="Directory containing the PDF files to merge"
+    ),
+    output_dir: str = typer.Argument(
+        ..., help="Directory where the merged PDF will be saved"
+    ),
+    open_doc: bool = typer.Option(
+        False, "--open", help="Open the merged PDF after saving"
+    ),
 ):
     """
     Merge all PDFs in a directory into a single file.
@@ -27,6 +33,7 @@ def pdf_merge(
         toolbook doc pdf merge ./my-pdfs ./output
         toolbook doc pdf merge ./my-pdfs ./output --open
     """
+
     def _log(msg: str) -> None:
         typer.echo(msg)
 
@@ -52,7 +59,9 @@ def pdf_split(
             "Omit to use ~/Downloads, use '.' for the current directory."
         ),
     ),
-    open_doc: bool = typer.Option(False, "--open", help="Open the output folder after splitting"),
+    open_doc: bool = typer.Option(
+        False, "--open", help="Open the output folder after splitting"
+    ),
 ):
     """
     Split a PDF into individual pages.
@@ -64,6 +73,7 @@ def pdf_split(
         toolbook doc pdf split ./document.pdf . --open
         toolbook doc pdf split ./document.pdf ./output --open
     """
+
     def _log(msg: str) -> None:
         typer.echo(msg)
 
@@ -81,7 +91,9 @@ def pdf_split(
 
 @pdf_app.command("extract-img")
 def pdf_extract_img(
-    pdf_file: str = typer.Argument(..., help="Path to the PDF file to extract images from"),
+    pdf_file: str = typer.Argument(
+        ..., help="Path to the PDF file to extract images from"
+    ),
     output_path: str = typer.Argument(
         None,
         help=(
@@ -89,7 +101,9 @@ def pdf_extract_img(
             "Omit to use ~/Downloads, use '.' for the current directory."
         ),
     ),
-    open_doc: bool = typer.Option(False, "--open", help="Open the output folder after extracting"),
+    open_doc: bool = typer.Option(
+        False, "--open", help="Open the output folder after extracting"
+    ),
 ):
     """
     Extract all images from a PDF into individual files.
@@ -101,6 +115,7 @@ def pdf_extract_img(
         toolbook doc pdf extract-img ./document.pdf . --open
         toolbook doc pdf extract-img ./document.pdf ./output --open
     """
+
     def _log(msg: str) -> None:
         typer.echo(msg)
 
@@ -126,7 +141,9 @@ def pdf_convert_docx(
             "Omit to use ~/Downloads, use '.' for the current directory."
         ),
     ),
-    open_doc: bool = typer.Option(False, "--open", help="Open the generated .docx file after conversion"),
+    open_doc: bool = typer.Option(
+        False, "--open", help="Open the generated .docx file after conversion"
+    ),
 ):
     """
     Convert a PDF to DOCX format.
@@ -136,6 +153,7 @@ def pdf_convert_docx(
         toolbook doc pdf convert-docx ./document.pdf . --open
         toolbook doc pdf convert-docx ./document.pdf ./output --open
     """
+
     def _log(msg: str) -> None:
         typer.echo(msg)
 
@@ -161,7 +179,9 @@ def pdf_convert_pdf(
             "Omit to use ~/Downloads, use '.' for the current directory."
         ),
     ),
-    open_doc: bool = typer.Option(False, "--open", help="Open the generated PDF after conversion"),
+    open_doc: bool = typer.Option(
+        False, "--open", help="Open the generated PDF after conversion"
+    ),
 ):
     """
     Convert a DOCX file to PDF format.
@@ -173,6 +193,7 @@ def pdf_convert_pdf(
         toolbook doc pdf convert-pdf ./document.docx . --open
         toolbook doc pdf convert-pdf ./document.docx ./output --open
     """
+
     def _log(msg: str) -> None:
         typer.echo(msg)
 

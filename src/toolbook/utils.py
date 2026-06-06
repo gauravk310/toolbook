@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+
 def hello():
     return "Hello from Toolbook"
 
@@ -16,7 +17,7 @@ def get_token(token_name: str) -> str | None:
     # 1. Check os.environ first
     if token_name in os.environ:
         return os.environ[token_name]
-        
+
     # 2. Fallback to reading ~/.toolbook/.env directly
     env_file = Path.home() / ".toolbook" / ".env"
     if env_file.exists():

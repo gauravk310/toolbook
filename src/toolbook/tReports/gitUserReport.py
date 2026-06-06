@@ -18,13 +18,16 @@ from jinja2 import Template
 from github import Github, RateLimitExceededException, Auth
 from toolbook.utils import get_token
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
 # ─────────────────────────────────────────────
 #  GITHUB DATA FETCHER
 # ─────────────────────────────────────────────
+
 
 class GitHubFetcher:
     """Handles all GitHub API calls with rate-limit handling and retries."""
@@ -47,7 +50,9 @@ class GitHubFetcher:
                     reset_time = reset_time.replace(tzinfo=timezone.utc)
                 now = datetime.now(timezone.utc)
                 wait = max(0, (reset_time - now).total_seconds() + 5)
-                logger.warning(f"Rate limit low ({core.remaining}). Waiting {wait:.0f}s…")
+                logger.warning(
+                    f"Rate limit low ({core.remaining}). Waiting {wait:.0f}s…"
+                )
                 time.sleep(wait)
         except Exception as e:
             logger.warning(f"Failed to check rate limit: {e}")
@@ -62,7 +67,7 @@ class GitHubFetcher:
                 if r.status_code == 403:
                     time.sleep(60)
             except Exception as e:
-                logger.warning(f"Request failed ({attempt+1}/3): {e}")
+                logger.warning(f"Request failed ({attempt + 1}/3): {e}")
                 time.sleep(5 * (attempt + 1))
         return None
 
@@ -190,6 +195,7 @@ class GitHubFetcher:
 #  ANALYZER
 # ─────────────────────────────────────────────
 
+
 class GitHubAnalyzer:
     """Aggregates and scores all fetched data."""
 
@@ -217,8 +223,13 @@ class GitHubAnalyzer:
         collab_stats = self._analyze_collaboration(user, repos, events)
 
         scores = self._compute_scores(
-            profile, repo_stats, language_stats, commit_stats,
-            contribution_stats, quality_stats, collab_stats
+            profile,
+            repo_stats,
+            language_stats,
+            commit_stats,
+            contribution_stats,
+            quality_stats,
+            collab_stats,
         )
 
         return {
@@ -353,8 +364,23 @@ class GitHubAnalyzer:
             "database": [],
             "cloud": [],
         }
-        devops_kw = {"Docker", "Docker Compose", "Kubernetes", "Terraform", "GitHub Actions"}
-        backend_kw = {"Python", "Node.js", "Go", "Rust", "Java/Maven", "Java/Gradle", "Ruby", "PHP"}
+        devops_kw = {
+            "Docker",
+            "Docker Compose",
+            "Kubernetes",
+            "Terraform",
+            "GitHub Actions",
+        }
+        backend_kw = {
+            "Python",
+            "Node.js",
+            "Go",
+            "Rust",
+            "Java/Maven",
+            "Java/Gradle",
+            "Ruby",
+            "PHP",
+        }
         frontend_kw = {"React", "Vue", "Angular", "Next.js"}
         for tech in all_tech:
             if tech in devops_kw:
@@ -387,12 +413,22 @@ class GitHubAnalyzer:
                 dates.append(dt)
             except Exception:
                 pass
-        total_commits = sum(
-            e.get("payload", {}).get("size", 0) for e in push_events
+        total_commits = sum(e.get("payload", {}).get("size", 0) for e in push_events)
+        most_active_hour = (
+            max(hour_counter, key=hour_counter.get) if hour_counter else 12
         )
-        most_active_hour = max(hour_counter, key=hour_counter.get) if hour_counter else 12
-        most_active_day = max(day_counter, key=day_counter.get) if day_counter else "Monday"
-        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        most_active_day = (
+            max(day_counter, key=day_counter.get) if day_counter else "Monday"
+        )
+        day_order = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ]
         day_counts = {d: day_counter.get(d, 0) for d in day_order}
         hour_counts = {h: hour_counter.get(h, 0) for h in range(24)}
         return {
@@ -411,10 +447,12 @@ class GitHubAnalyzer:
         if cal.get("weeks"):
             for week in cal["weeks"]:
                 for day in week.get("contributionDays", []):
-                    days_data.append({
-                        "date": day["date"],
-                        "count": day["contributionCount"],
-                    })
+                    days_data.append(
+                        {
+                            "date": day["date"],
+                            "count": day["contributionCount"],
+                        }
+                    )
         # Contribution streak
         streak = 0
         max_streak = 0
@@ -474,13 +512,18 @@ class GitHubAnalyzer:
                         score += 10
                 except Exception:
                     pass
-                if any(t in contents for t in ["test", "tests", "spec", "specs", "__tests__"]):
+                if any(
+                    t in contents
+                    for t in ["test", "tests", "spec", "specs", "__tests__"]
+                ):
                     score += 10
                 if repo.stargazers_count > 0:
                     score += min(10, repo.stargazers_count)
             except Exception:
                 score = 30
-            scores.append({"name": repo.name, "score": min(100, score), "url": repo.html_url})
+            scores.append(
+                {"name": repo.name, "score": min(100, score), "url": repo.html_url}
+            )
         avg_score = round(sum(s["score"] for s in scores) / max(len(scores), 1))
         top_quality = sorted(scores, key=lambda x: x["score"], reverse=True)[:5]
         return {
@@ -494,7 +537,9 @@ class GitHubAnalyzer:
         issue_events = [e for e in events if e.get("type") == "IssuesEvent"]
         review_events = [e for e in events if e.get("type") == "PullRequestReviewEvent"]
         follower_ratio = (
-            round(user.followers / max(user.following, 1), 2) if user.following else user.followers
+            round(user.followers / max(user.following, 1), 2)
+            if user.following
+            else user.followers
         )
         return {
             "pull_requests": len(pr_events),
@@ -544,13 +589,22 @@ class GitHubAnalyzer:
             "productivity_score": productivity_score,
             "collaboration_score": collaboration_score,
             "quality_score": quality.get("average_score", 50),
-            "overall": round((profile_score + productivity_score + collaboration_score + quality.get("average_score", 50)) / 4),
+            "overall": round(
+                (
+                    profile_score
+                    + productivity_score
+                    + collaboration_score
+                    + quality.get("average_score", 50)
+                )
+                / 4
+            ),
         }
 
 
 # ─────────────────────────────────────────────
 #  CHART GENERATOR
 # ─────────────────────────────────────────────
+
 
 class ChartGenerator:
     """Generates Plotly charts as JSON for inline HTML embedding."""
@@ -566,16 +620,29 @@ class ChartGenerator:
         labels = list(pcts.keys())[:10]
         values = [pcts[label] for label in labels]
         colors = [
-            "#00D8FF", "#F7E018", "#3178C6", "#00ADD8", "#B07219",
-            "#E34C26", "#563D7C", "#F1502F", "#00A88E", "#CC342D",
+            "#00D8FF",
+            "#F7E018",
+            "#3178C6",
+            "#00ADD8",
+            "#B07219",
+            "#E34C26",
+            "#563D7C",
+            "#F1502F",
+            "#00A88E",
+            "#CC342D",
         ]
-        fig = go.Figure(go.Pie(
-            labels=labels, values=values,
-            hole=0.55,
-            marker=dict(colors=colors[:len(labels)], line=dict(color="#0d1117", width=2)),
-            textinfo="label+percent",
-            textfont=dict(color="#e6edf3", size=11),
-        ))
+        fig = go.Figure(
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.55,
+                marker=dict(
+                    colors=colors[: len(labels)], line=dict(color="#0d1117", width=2)
+                ),
+                textinfo="label+percent",
+                textfont=dict(color="#e6edf3", size=11),
+            )
+        )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
@@ -595,19 +662,42 @@ class ChartGenerator:
         df["date"] = pd.to_datetime(df["date"], format="mixed", dayfirst=False)
         df["week"] = df["date"].dt.isocalendar().week.astype(str)
         df["day"] = df["date"].dt.day_name()
-        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        df["day"] = pd.Categorical(df["date"].dt.day_name(), categories=day_order, ordered=True)
-        pivot = df.pivot_table(index="day", columns="date", values="count", fill_value=0)
+        day_order = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ]
+        df["day"] = pd.Categorical(
+            df["date"].dt.day_name(), categories=day_order, ordered=True
+        )
+        pivot = df.pivot_table(
+            index="day", columns="date", values="count", fill_value=0
+        )
         z = pivot.values.tolist()
         x = [str(c.date()) for c in pivot.columns]
         y = list(pivot.index)
-        fig = go.Figure(go.Heatmap(
-            z=z, x=x, y=y,
-            colorscale=[[0, "#0d1117"], [0.01, "#0e4429"], [0.3, "#006d32"], [0.7, "#26a641"], [1, "#39d353"]],
-            showscale=False,
-            xgap=2, ygap=2,
-            hovertemplate="%{x}: %{z} contributions<extra></extra>",
-        ))
+        fig = go.Figure(
+            go.Heatmap(
+                z=z,
+                x=x,
+                y=y,
+                colorscale=[
+                    [0, "#0d1117"],
+                    [0.01, "#0e4429"],
+                    [0.3, "#006d32"],
+                    [0.7, "#26a641"],
+                    [1, "#39d353"],
+                ],
+                showscale=False,
+                xgap=2,
+                ygap=2,
+                hovertemplate="%{x}: %{z} contributions<extra></extra>",
+            )
+        )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
@@ -623,15 +713,18 @@ class ChartGenerator:
         hours = list(range(24))
         counts = [hour_dist.get(h, 0) for h in hours]
         labels = [f"{h:02d}:00" for h in hours]
-        fig = go.Figure(go.Bar(
-            x=labels, y=counts,
-            marker=dict(
-                color=counts,
-                colorscale=[[0, "#1c2128"], [0.5, "#1f6feb"], [1, "#58a6ff"]],
-                showscale=False,
-            ),
-            hovertemplate="%{x}: %{y} commits<extra></extra>",
-        ))
+        fig = go.Figure(
+            go.Bar(
+                x=labels,
+                y=counts,
+                marker=dict(
+                    color=counts,
+                    colorscale=[[0, "#1c2128"], [0.5, "#1f6feb"], [1, "#58a6ff"]],
+                    showscale=False,
+                ),
+                hovertemplate="%{x}: %{y} commits<extra></extra>",
+            )
+        )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
@@ -654,17 +747,25 @@ class ChartGenerator:
             total += c
             cumulative.append(total)
         fig = go.Figure()
-        fig.add_trace(go.Bar(
-            x=years, y=counts, name="New Repos",
-            marker_color="#1f6feb",
-            opacity=0.7,
-        ))
-        fig.add_trace(go.Scatter(
-            x=years, y=cumulative, name="Total Repos",
-            line=dict(color="#58a6ff", width=2),
-            mode="lines+markers",
-            yaxis="y2",
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=years,
+                y=counts,
+                name="New Repos",
+                marker_color="#1f6feb",
+                opacity=0.7,
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=years,
+                y=cumulative,
+                name="Total Repos",
+                line=dict(color="#58a6ff", width=2),
+                mode="lines+markers",
+                yaxis="y2",
+            )
+        )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
@@ -680,7 +781,13 @@ class ChartGenerator:
         return self._fig_to_json(fig)
 
     def radar_chart(self, scores: dict) -> str:
-        categories = ["Profile", "Productivity", "Collaboration", "Code Quality", "Activity"]
+        categories = [
+            "Profile",
+            "Productivity",
+            "Collaboration",
+            "Code Quality",
+            "Activity",
+        ]
         values = [
             scores.get("profile_score", 0),
             scores.get("productivity_score", 0),
@@ -688,24 +795,29 @@ class ChartGenerator:
             scores.get("quality_score", 0),
             min(100, scores.get("productivity_score", 0) + 10),
         ]
-        fig = go.Figure(go.Scatterpolar(
-            r=values + [values[0]],
-            theta=categories + [categories[0]],
-            fill="toself",
-            fillcolor="rgba(31, 111, 235, 0.2)",
-            line=dict(color="#58a6ff", width=2),
-            marker=dict(size=6, color="#58a6ff"),
-        ))
+        fig = go.Figure(
+            go.Scatterpolar(
+                r=values + [values[0]],
+                theta=categories + [categories[0]],
+                fill="toself",
+                fillcolor="rgba(31, 111, 235, 0.2)",
+                line=dict(color="#58a6ff", width=2),
+                marker=dict(size=6, color="#58a6ff"),
+            )
+        )
         fig.update_layout(
             polar=dict(
                 bgcolor="rgba(0,0,0,0)",
                 radialaxis=dict(
-                    visible=True, range=[0, 100],
-                    gridcolor="#21262d", tickfont=dict(color="#8b949e", size=9),
+                    visible=True,
+                    range=[0, 100],
+                    gridcolor="#21262d",
+                    tickfont=dict(color="#8b949e", size=9),
                     linecolor="#21262d",
                 ),
                 angularaxis=dict(
-                    gridcolor="#21262d", tickfont=dict(color="#e6edf3", size=11),
+                    gridcolor="#21262d",
+                    tickfont=dict(color="#e6edf3", size=11),
                     linecolor="#21262d",
                 ),
             ),
@@ -722,14 +834,17 @@ class ChartGenerator:
             return "{}"
         sorted_months = sorted(monthly_trend.keys())[-12:]
         values = [monthly_trend[m] for m in sorted_months]
-        fig = go.Figure(go.Scatter(
-            x=sorted_months, y=values,
-            fill="tozeroy",
-            fillcolor="rgba(31, 111, 235, 0.15)",
-            line=dict(color="#1f6feb", width=2),
-            mode="lines",
-            hovertemplate="%{x}: %{y} contributions<extra></extra>",
-        ))
+        fig = go.Figure(
+            go.Scatter(
+                x=sorted_months,
+                y=values,
+                fill="tozeroy",
+                fillcolor="rgba(31, 111, 235, 0.15)",
+                line=dict(color="#1f6feb", width=2),
+                mode="lines",
+                hovertemplate="%{x}: %{y} contributions<extra></extra>",
+            )
+        )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
@@ -742,15 +857,26 @@ class ChartGenerator:
         return self._fig_to_json(fig)
 
     def weekday_bar(self, day_dist: dict) -> str:
-        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        day_order = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ]
         counts = [day_dist.get(d, 0) for d in day_order]
         short_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         colors = ["#1f6feb" if i < 5 else "#388bfd" for i in range(7)]
-        fig = go.Figure(go.Bar(
-            x=short_days, y=counts,
-            marker_color=colors,
-            hovertemplate="%{x}: %{y} pushes<extra></extra>",
-        ))
+        fig = go.Figure(
+            go.Bar(
+                x=short_days,
+                y=counts,
+                marker_color=colors,
+                hovertemplate="%{x}: %{y} pushes<extra></extra>",
+            )
+        )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
@@ -1622,12 +1748,18 @@ class ReportGenerator:
 
     def generate(self, data: dict, output_path: Path) -> Path:
         logger.info("Generating charts…")
-        chart_heatmap = self.charts.commit_heatmap(data["contributions"]["heatmap_data"])
-        chart_monthly_contrib = self.charts.monthly_contributions(data["contributions"]["monthly_trend"])
+        chart_heatmap = self.charts.commit_heatmap(
+            data["contributions"]["heatmap_data"]
+        )
+        chart_monthly_contrib = self.charts.monthly_contributions(
+            data["contributions"]["monthly_trend"]
+        )
         chart_hours = self.charts.commit_hour_bar(data["commits"]["hour_distribution"])
         chart_weekdays = self.charts.weekday_bar(data["commits"]["day_distribution"])
         chart_languages = self.charts.language_donut(data["languages"])
-        chart_repo_growth = self.charts.repo_growth_chart(data["repos"].get("creation_by_year", {}))
+        chart_repo_growth = self.charts.repo_growth_chart(
+            data["repos"].get("creation_by_year", {})
+        )
         chart_radar = self.charts.radar_chart(data["scores"])
 
         logger.info("Rendering HTML template…")
@@ -1661,10 +1793,9 @@ class ReportGenerator:
 #  PUBLIC FUNCTION
 # ─────────────────────────────────────────────
 
+
 def gitUserReport(
-    username: str, 
-    token: str | None = None, 
-    output_dir: str = "reports"
+    username: str, token: str | None = None, output_dir: str = "reports"
 ) -> tuple[str, dict]:
     """
     Analyze a GitHub user account and generate a professional HTML analytics dashboard.
@@ -1680,7 +1811,9 @@ def gitUserReport(
     if not token:
         token = get_token("GITHUB_TOKEN")
     if not token:
-        logger.warning("GITHUB_TOKEN not set — operating in unauthenticated mode (rate limits apply).")
+        logger.warning(
+            "GITHUB_TOKEN not set — operating in unauthenticated mode (rate limits apply)."
+        )
 
     fetcher = GitHubFetcher(token)
     analyzer = GitHubAnalyzer(fetcher)
@@ -1707,7 +1840,9 @@ def gitUserReport(
         "top_languages": data["languages"]["top_languages"],
         "top_technologies": data["tech_stack"]["top_tech"],
         "most_active_repository": (
-            data["repos"]["top_starred"][0]["name"] if data["repos"].get("top_starred") else "N/A"
+            data["repos"]["top_starred"][0]["name"]
+            if data["repos"].get("top_starred")
+            else "N/A"
         ),
     }
 
@@ -1720,6 +1855,7 @@ def gitUserReport(
 
 if __name__ == "__main__":
     import sys
+
     user = sys.argv[1] if len(sys.argv) > 1 else "torvalds"
     path, s = gitUserReport(user)
     print(f"\nReport: {path}")

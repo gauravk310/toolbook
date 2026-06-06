@@ -27,13 +27,21 @@ from typing import Any, Dict, List, Optional, Tuple
 # ─── Optional rich progress bar ──────────────────────────────────────────────
 try:
     from rich.console import Console  # noqa: F401
-    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn  # noqa: F401
+    from rich.progress import (
+        Progress,
+        SpinnerColumn,
+        TextColumn,
+        BarColumn,
+        TaskProgressColumn,
+    )  # noqa: F401
     from rich.logging import RichHandler
+
     _RICH = True
 except ImportError:
     _RICH = False
 
 # ─── Logging setup ────────────────────────────────────────────────────────────
+
 
 def _setup_logging(verbose: bool = False) -> logging.Logger:
     level = logging.DEBUG if verbose else logging.INFO
@@ -55,29 +63,33 @@ log = _setup_logging()
 
 # ─── Data models ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ComplexityResult:
     file: str
     function: str
     complexity: int
-    rank: str          # A–F
+    rank: str  # A–F
     line: int = 0
+
 
 @dataclass
 class MaintainabilityResult:
     file: str
-    mi_score: float    # 0–100
-    rank: str          # A–C
+    mi_score: float  # 0–100
+    rank: str  # A–C
+
 
 @dataclass
 class SecurityIssue:
     file: str
     line: int
-    severity: str      # HIGH / MEDIUM / LOW
+    severity: str  # HIGH / MEDIUM / LOW
     confidence: str
     issue_id: str
     description: str
-    tool: str          # bandit | semgrep
+    tool: str  # bandit | semgrep
+
 
 @dataclass
 class LintIssue:
@@ -86,14 +98,16 @@ class LintIssue:
     column: int
     symbol: str
     message: str
-    category: str      # convention | refactor | warning | error | fatal
+    category: str  # convention | refactor | warning | error | fatal
+
 
 @dataclass
 class DeadCodeItem:
     file: str
     line: int
-    kind: str          # unused-import | unused-variable | dead-function | …
+    kind: str  # unused-import | unused-variable | dead-function | …
     name: str
+
 
 @dataclass
 class DuplicateBlock:
@@ -104,6 +118,7 @@ class DuplicateBlock:
     lines: int
     fingerprint: str
 
+
 @dataclass
 class DependencyVuln:
     package: str
@@ -112,6 +127,7 @@ class DependencyVuln:
     severity: str
     description: str
     fix_version: str = ""
+
 
 @dataclass
 class AnalysisReport:
@@ -140,10 +156,25 @@ class AnalysisReport:
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 SKIP_DIRS = {
-    ".git", ".hg", ".svn", "__pycache__", ".mypy_cache", ".pytest_cache",
-    ".tox", "node_modules", "dist", "build", ".venv", "venv", "env",
-    ".env", "site-packages", ".eggs", "*.egg-info",
+    ".git",
+    ".hg",
+    ".svn",
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".tox",
+    "node_modules",
+    "dist",
+    "build",
+    ".venv",
+    "venv",
+    "env",
+    ".env",
+    "site-packages",
+    ".eggs",
+    "*.egg-info",
 }
+
 
 def _collect_python_files(root: Path, extra_exclude: List[str] = []) -> List[Path]:
     """Recursively collect .py files, skipping known noise directories."""
@@ -151,8 +182,10 @@ def _collect_python_files(root: Path, extra_exclude: List[str] = []) -> List[Pat
     for dirpath, dirnames, filenames in os.walk(root):
         # Prune directories in-place
         dirnames[:] = [
-            d for d in dirnames
-            if d not in SKIP_DIRS and not d.endswith(".egg-info")
+            d
+            for d in dirnames
+            if d not in SKIP_DIRS
+            and not d.endswith(".egg-info")
             and not any(Path(dirpath, d).match(pat) for pat in extra_exclude)
         ]
         for fn in filenames:
@@ -161,7 +194,9 @@ def _collect_python_files(root: Path, extra_exclude: List[str] = []) -> List[Pat
     return files
 
 
-def _run(cmd: List[str], cwd: Optional[str] = None, timeout: int = 120) -> Tuple[str, str, int]:
+def _run(
+    cmd: List[str], cwd: Optional[str] = None, timeout: int = 120
+) -> Tuple[str, str, int]:
     """Run a subprocess and return (stdout, stderr, returncode)."""
     try:
         result = subprocess.run(
@@ -183,22 +218,29 @@ def _tool_available(name: str) -> bool:
 
 # ─── Analyzers ────────────────────────────────────────────────────────────────
 
+
 class ComplexityAnalyzer:
     """Uses radon for cyclomatic complexity and maintainability index."""
 
-    def analyze(self, files: List[Path]) -> Tuple[List[ComplexityResult], List[MaintainabilityResult]]:
+    def analyze(
+        self, files: List[Path]
+    ) -> Tuple[List[ComplexityResult], List[MaintainabilityResult]]:
         cc_results: List[ComplexityResult] = []
         mi_results: List[MaintainabilityResult] = []
 
         try:
             # pyrefly: ignore [missing-import]
             import radon.complexity as rc
+
             # pyrefly: ignore [missing-import]
             import radon.metrics as rm
+
             # pyrefly: ignore [missing-import]
             import radon.visitors as rv  # noqa: F401
         except ImportError:
-            log.warning("radon not installed – skipping complexity analysis (pip install radon)")
+            log.warning(
+                "radon not installed – skipping complexity analysis (pip install radon)"
+            )
             return cc_results, mi_results
 
         for path in files:
@@ -207,21 +249,25 @@ class ComplexityAnalyzer:
                 # Cyclomatic complexity
                 blocks = rc.cc_visit(source)
                 for block in blocks:
-                    cc_results.append(ComplexityResult(
-                        file=str(path),
-                        function=block.name,
-                        complexity=block.complexity,
-                        rank=rc.cc_rank(block.complexity),
-                        line=block.lineno,
-                    ))
+                    cc_results.append(
+                        ComplexityResult(
+                            file=str(path),
+                            function=block.name,
+                            complexity=block.complexity,
+                            rank=rc.cc_rank(block.complexity),
+                            line=block.lineno,
+                        )
+                    )
                 # Maintainability index
                 mi = rm.mi_visit(source, multi=True)
                 rank = "A" if mi >= 80 else ("B" if mi >= 50 else "C")
-                mi_results.append(MaintainabilityResult(
-                    file=str(path),
-                    mi_score=round(mi, 2),
-                    rank=rank,
-                ))
+                mi_results.append(
+                    MaintainabilityResult(
+                        file=str(path),
+                        mi_score=round(mi, 2),
+                        rank=rank,
+                    )
+                )
             except Exception as exc:
                 log.debug(f"Complexity error {path}: {exc}")
 
@@ -249,15 +295,17 @@ class SecurityAnalyzer:
         try:
             data = json.loads(stdout)
             for r in data.get("results", []):
-                issues.append(SecurityIssue(
-                    file=r.get("filename", ""),
-                    line=r.get("line_number", 0),
-                    severity=r.get("issue_severity", "LOW").upper(),
-                    confidence=r.get("issue_confidence", "LOW").upper(),
-                    issue_id=r.get("test_id", ""),
-                    description=r.get("issue_text", ""),
-                    tool="bandit",
-                ))
+                issues.append(
+                    SecurityIssue(
+                        file=r.get("filename", ""),
+                        line=r.get("line_number", 0),
+                        severity=r.get("issue_severity", "LOW").upper(),
+                        confidence=r.get("issue_confidence", "LOW").upper(),
+                        issue_id=r.get("test_id", ""),
+                        description=r.get("issue_text", ""),
+                        tool="bandit",
+                    )
+                )
         except (json.JSONDecodeError, KeyError) as exc:
             log.debug(f"bandit parse error: {exc}")
         return issues
@@ -276,15 +324,17 @@ class SecurityAnalyzer:
             for r in data.get("results", []):
                 sev = r.get("extra", {}).get("severity", "WARNING").upper()
                 sev_map = {"ERROR": "HIGH", "WARNING": "MEDIUM", "INFO": "LOW"}
-                issues.append(SecurityIssue(
-                    file=r.get("path", ""),
-                    line=r.get("start", {}).get("line", 0),
-                    severity=sev_map.get(sev, "LOW"),
-                    confidence="MEDIUM",
-                    issue_id=r.get("check_id", ""),
-                    description=r.get("extra", {}).get("message", ""),
-                    tool="semgrep",
-                ))
+                issues.append(
+                    SecurityIssue(
+                        file=r.get("path", ""),
+                        line=r.get("start", {}).get("line", 0),
+                        severity=sev_map.get(sev, "LOW"),
+                        confidence="MEDIUM",
+                        issue_id=r.get("check_id", ""),
+                        description=r.get("extra", {}).get("message", ""),
+                        tool="semgrep",
+                    )
+                )
         except Exception as exc:
             log.debug(f"semgrep parse error: {exc}")
         return issues
@@ -296,8 +346,13 @@ class LintAnalyzer:
     def analyze(self, repo_path: Path) -> Tuple[List[LintIssue], float]:
         issues: List[LintIssue] = []
         stdout, stderr, rc = _run(
-            ["pylint", str(repo_path), "--output-format=json", "--recursive=y",
-             "--disable=C0114,C0115,C0116"],  # suppress missing docstrings for speed
+            [
+                "pylint",
+                str(repo_path),
+                "--output-format=json",
+                "--recursive=y",
+                "--disable=C0114,C0115,C0116",
+            ],  # suppress missing docstrings for speed
             timeout=300,
         )
         if rc == -1:
@@ -307,14 +362,16 @@ class LintAnalyzer:
         try:
             data = json.loads(stdout)
             for item in data:
-                issues.append(LintIssue(
-                    file=item.get("path", ""),
-                    line=item.get("line", 0),
-                    column=item.get("column", 0),
-                    symbol=item.get("symbol", ""),
-                    message=item.get("message", ""),
-                    category=item.get("type", "convention"),
-                ))
+                issues.append(
+                    LintIssue(
+                        file=item.get("path", ""),
+                        line=item.get("line", 0),
+                        column=item.get("column", 0),
+                        symbol=item.get("symbol", ""),
+                        message=item.get("message", ""),
+                        category=item.get("type", "convention"),
+                    )
+                )
         except (json.JSONDecodeError, TypeError) as exc:
             log.debug(f"pylint parse error: {exc}")
 
@@ -360,12 +417,14 @@ class DeadCodeAnalyzer:
                 elif "unused class" in raw_msg:
                     kind = "dead-class"
                 name_match = re.search(r"'(.+?)'", raw_msg)
-                items.append(DeadCodeItem(
-                    file=m.group(1),
-                    line=int(m.group(2)),
-                    kind=kind,
-                    name=name_match.group(1) if name_match else raw_msg,
-                ))
+                items.append(
+                    DeadCodeItem(
+                        file=m.group(1),
+                        line=int(m.group(2)),
+                        kind=kind,
+                        name=name_match.group(1) if name_match else raw_msg,
+                    )
+                )
         return items
 
     def _ast_unused_imports(self, files: List[Path]) -> List[DeadCodeItem]:
@@ -397,12 +456,14 @@ class DeadCodeAnalyzer:
 
                 for name, lineno in imported_names.items():
                     if name not in used_names and name != "*":
-                        items.append(DeadCodeItem(
-                            file=str(path),
-                            line=lineno,
-                            kind="unused-import",
-                            name=name,
-                        ))
+                        items.append(
+                            DeadCodeItem(
+                                file=str(path),
+                                line=lineno,
+                                kind="unused-import",
+                                name=name,
+                            )
+                        )
             except Exception:
                 pass
         return items
@@ -423,10 +484,11 @@ class DuplicateAnalyzer:
                 lines = source.splitlines()
                 # Sliding window of MIN_LINES
                 for i in range(len(lines) - self.MIN_LINES + 1):
-                    window = lines[i:i + self.MIN_LINES]
+                    window = lines[i : i + self.MIN_LINES]
                     # Normalise whitespace & strip comments
                     normalized = "\n".join(
-                        re.sub(r"#.*", "", line).strip() for line in window
+                        re.sub(r"#.*", "", line).strip()
+                        for line in window
                         if line.strip() and not line.strip().startswith("#")
                     )
                     if len(normalized) < 40:
@@ -451,12 +513,16 @@ class DuplicateAnalyzer:
                     if key in seen:
                         continue
                     seen.add(key)
-                    duplicates.append(DuplicateBlock(
-                        file_a=file_a, start_a=line_a,
-                        file_b=file_b, start_b=line_b,
-                        lines=self.MIN_LINES,
-                        fingerprint=fp,
-                    ))
+                    duplicates.append(
+                        DuplicateBlock(
+                            file_a=file_a,
+                            start_a=line_a,
+                            file_b=file_b,
+                            start_b=line_b,
+                            lines=self.MIN_LINES,
+                            fingerprint=fp,
+                        )
+                    )
         # Cap results for performance
         return duplicates[:200]
 
@@ -490,14 +556,16 @@ class DependencyAnalyzer:
                     fix = ""
                     if vuln.get("fix_versions"):
                         fix = ", ".join(vuln["fix_versions"])
-                    vulns.append(DependencyVuln(
-                        package=dep.get("name", ""),
-                        installed_version=dep.get("version", ""),
-                        vulnerability_id=vuln.get("id", ""),
-                        severity="HIGH",  # pip-audit doesn't always include severity
-                        description=vuln.get("description", ""),
-                        fix_version=fix,
-                    ))
+                    vulns.append(
+                        DependencyVuln(
+                            package=dep.get("name", ""),
+                            installed_version=dep.get("version", ""),
+                            vulnerability_id=vuln.get("id", ""),
+                            severity="HIGH",  # pip-audit doesn't always include severity
+                            description=vuln.get("description", ""),
+                            fix_version=fix,
+                        )
+                    )
         except Exception as exc:
             log.debug(f"pip-audit parse error: {exc}")
         return vulns
@@ -517,14 +585,16 @@ class DependencyAnalyzer:
         try:
             data = json.loads(stdout)
             for item in data:
-                vulns.append(DependencyVuln(
-                    package=item[0],
-                    installed_version=item[2],
-                    vulnerability_id=item[4],
-                    severity="MEDIUM",
-                    description=item[3],
-                    fix_version="",
-                ))
+                vulns.append(
+                    DependencyVuln(
+                        package=item[0],
+                        installed_version=item[2],
+                        vulnerability_id=item[4],
+                        severity="MEDIUM",
+                        description=item[3],
+                        fix_version="",
+                    )
+                )
         except Exception as exc:
             log.debug(f"safety parse error: {exc}")
         return vulns
@@ -532,18 +602,21 @@ class DependencyAnalyzer:
 
 # ─── Score calculation ─────────────────────────────────────────────────────────
 
+
 def _calculate_scores(report: AnalysisReport) -> None:
     """Derive quality scores (0-100) from raw findings."""
     # Security score
     high = sum(1 for s in report.security if s.severity == "HIGH")
-    med  = sum(1 for s in report.security if s.severity == "MEDIUM")
-    low  = sum(1 for s in report.security if s.severity == "LOW")
+    med = sum(1 for s in report.security if s.severity == "MEDIUM")
+    low = sum(1 for s in report.security if s.severity == "LOW")
     sec_penalty = high * 10 + med * 3 + low * 1
     report.security_score = max(0.0, round(100 - sec_penalty, 1))
 
     # Maintainability score
     if report.maintainability:
-        avg_mi = sum(m.mi_score for m in report.maintainability) / len(report.maintainability)
+        avg_mi = sum(m.mi_score for m in report.maintainability) / len(
+            report.maintainability
+        )
         report.maintainability_score = round(min(100, avg_mi), 1)
     else:
         report.maintainability_score = 75.0
@@ -563,10 +636,12 @@ def _calculate_scores(report: AnalysisReport) -> None:
 
     # Overall
     report.quality_score = round(
-        (report.security_score * 0.35
-         + report.maintainability_score * 0.25
-         + report.complexity_score * 0.20
-         + report.pylint_score * 0.20),
+        (
+            report.security_score * 0.35
+            + report.maintainability_score * 0.25
+            + report.complexity_score * 0.20
+            + report.pylint_score * 0.20
+        ),
         1,
     )
 
@@ -1215,11 +1290,13 @@ sections.forEach(s => observer.observe(s));
 
 # ─── Recommendation generator ─────────────────────────────────────────────────
 
+
 @dataclass
 class Recommendation:
     icon: str
     title: str
     body: str
+
 
 def _build_recommendations(report: AnalysisReport) -> List[Recommendation]:
     recs: List[Recommendation] = []
@@ -1227,72 +1304,100 @@ def _build_recommendations(report: AnalysisReport) -> List[Recommendation]:
     if report.security:
         high = [s for s in report.security if s.severity == "HIGH"]
         if high:
-            recs.append(Recommendation(
-                "🚨", "Fix Critical Security Vulnerabilities",
-                f"{len(high)} HIGH-severity security issue(s) detected. Prioritise reviewing "
-                f"these immediately – they may lead to remote code execution, injection attacks, "
-                f"or secret leakage."
-            ))
-        recs.append(Recommendation(
-            "🔍", "Run Security Audit in CI/CD",
-            "Integrate bandit and semgrep into your CI pipeline so every pull request is scanned "
-            "for security regressions before merging."
-        ))
+            recs.append(
+                Recommendation(
+                    "🚨",
+                    "Fix Critical Security Vulnerabilities",
+                    f"{len(high)} HIGH-severity security issue(s) detected. Prioritise reviewing "
+                    f"these immediately – they may lead to remote code execution, injection attacks, "
+                    f"or secret leakage.",
+                )
+            )
+        recs.append(
+            Recommendation(
+                "🔍",
+                "Run Security Audit in CI/CD",
+                "Integrate bandit and semgrep into your CI pipeline so every pull request is scanned "
+                "for security regressions before merging.",
+            )
+        )
 
     if any(c.complexity > 10 for c in report.complexity):
-        recs.append(Recommendation(
-            "🔀", "Refactor Complex Functions",
-            f"{sum(1 for c in report.complexity if c.complexity > 10)} function(s) exceed a "
-            "cyclomatic complexity of 10. Consider breaking them into smaller single-responsibility "
-            "helpers and adding unit tests."
-        ))
+        recs.append(
+            Recommendation(
+                "🔀",
+                "Refactor Complex Functions",
+                f"{sum(1 for c in report.complexity if c.complexity > 10)} function(s) exceed a "
+                "cyclomatic complexity of 10. Consider breaking them into smaller single-responsibility "
+                "helpers and adding unit tests.",
+            )
+        )
 
     if report.maintainability and any(m.mi_score < 50 for m in report.maintainability):
-        recs.append(Recommendation(
-            "📉", "Improve Low-Maintainability Files",
-            "Several files have a Maintainability Index below 50 (rank C). Improve by adding "
-            "docstrings, reducing nesting depth, and extracting constants."
-        ))
+        recs.append(
+            Recommendation(
+                "📉",
+                "Improve Low-Maintainability Files",
+                "Several files have a Maintainability Index below 50 (rank C). Improve by adding "
+                "docstrings, reducing nesting depth, and extracting constants.",
+            )
+        )
 
     if report.dead_code:
-        recs.append(Recommendation(
-            "🧹", "Remove Dead Code",
-            f"{len(report.dead_code)} unused import(s)/variable(s)/function(s) found. "
-            "Dead code increases cognitive load and can hide bugs. Remove or refactor."
-        ))
+        recs.append(
+            Recommendation(
+                "🧹",
+                "Remove Dead Code",
+                f"{len(report.dead_code)} unused import(s)/variable(s)/function(s) found. "
+                "Dead code increases cognitive load and can hide bugs. Remove or refactor.",
+            )
+        )
 
     if report.duplicates:
-        recs.append(Recommendation(
-            "📋", "Eliminate Code Duplication",
-            f"{len(report.duplicates)} duplicate block(s) detected. Extract shared logic into "
-            "utility functions or base classes to follow DRY principles."
-        ))
+        recs.append(
+            Recommendation(
+                "📋",
+                "Eliminate Code Duplication",
+                f"{len(report.duplicates)} duplicate block(s) detected. Extract shared logic into "
+                "utility functions or base classes to follow DRY principles.",
+            )
+        )
 
     if report.dependencies:
-        recs.append(Recommendation(
-            "📦", "Update Vulnerable Dependencies",
-            f"{len(report.dependencies)} dependency vulnerability(ies) found. Run `pip-audit --fix` "
-            "or update pinned versions in requirements.txt / pyproject.toml."
-        ))
+        recs.append(
+            Recommendation(
+                "📦",
+                "Update Vulnerable Dependencies",
+                f"{len(report.dependencies)} dependency vulnerability(ies) found. Run `pip-audit --fix` "
+                "or update pinned versions in requirements.txt / pyproject.toml.",
+            )
+        )
 
     if report.pylint_score < 70:
-        recs.append(Recommendation(
-            "🧹", "Improve Pylint Score",
-            f"Current pylint score is {report.pylint_score:.0f}/100. Address naming conventions, "
-            "missing docstrings, and unused variable warnings to raise this above 80."
-        ))
+        recs.append(
+            Recommendation(
+                "🧹",
+                "Improve Pylint Score",
+                f"Current pylint score is {report.pylint_score:.0f}/100. Address naming conventions, "
+                "missing docstrings, and unused variable warnings to raise this above 80.",
+            )
+        )
 
     if not recs:
-        recs.append(Recommendation(
-            "🎉", "Looking Good!",
-            "No critical issues detected. Keep the quality bar high by running these checks "
-            "regularly in your CI/CD pipeline."
-        ))
+        recs.append(
+            Recommendation(
+                "🎉",
+                "Looking Good!",
+                "No critical issues detected. Keep the quality bar high by running these checks "
+                "regularly in your CI/CD pipeline.",
+            )
+        )
 
     return recs
 
 
 # ─── Jinja2 rendering ─────────────────────────────────────────────────────────
+
 
 def _score_color_class(score: float) -> str:
     if score >= 80:
@@ -1301,12 +1406,14 @@ def _score_color_class(score: float) -> str:
         return "stat-yellow"
     return "stat-red"
 
+
 def _score_class(score: float) -> str:
     if score >= 80:
         return "green"
     if score >= 50:
         return "yellow"
     return "red"
+
 
 def _badge_class(count: int, threshold_warn: int = 5, threshold_err: int = 20) -> str:
     if count == 0:
@@ -1315,11 +1422,12 @@ def _badge_class(count: int, threshold_warn: int = 5, threshold_err: int = 20) -
         return "yellow-badge"
     return "red-badge"
 
+
 def _render_html(report: AnalysisReport) -> str:
     try:
-        
         # pyrefly: ignore [missing-import]
         from jinja2 import Environment, BaseLoader, pass_eval_context  # noqa: F401
+
         # pyrefly: ignore [missing-import]
         import markupsafe  # noqa: F401
     except ImportError:
@@ -1333,23 +1441,31 @@ def _render_html(report: AnalysisReport) -> str:
     # Safe slice for Jinja
     env.filters["lower"] = lambda s: s.lower() if isinstance(s, str) else s
 
-    cc_rank_counts: Dict[str, int] = collections.Counter(c.rank for c in report.complexity)
+    cc_rank_counts: Dict[str, int] = collections.Counter(
+        c.rank for c in report.complexity
+    )
     cc_labels = list("ABCDEF")
     cc_data = [cc_rank_counts.get(r, 0) for r in cc_labels]
 
     sec_high = sum(1 for s in report.security if s.severity == "HIGH")
-    sec_med  = sum(1 for s in report.security if s.severity == "MEDIUM")
-    sec_low  = sum(1 for s in report.security if s.severity == "LOW")
+    sec_med = sum(1 for s in report.security if s.severity == "MEDIUM")
+    sec_low = sum(1 for s in report.security if s.severity == "LOW")
 
-    lint_cat_counter: Dict[str, int] = collections.Counter(item.category for item in report.lint)
+    lint_cat_counter: Dict[str, int] = collections.Counter(
+        item.category for item in report.lint
+    )
     lint_cats = list(lint_cat_counter.most_common(4))
 
     score_rows = [
-        ("Quality",         report.quality_score,         _fill_class(report.quality_score)),
-        ("Security",        report.security_score,        _fill_class(report.security_score)),
-        ("Maintainability", report.maintainability_score, _fill_class(report.maintainability_score)),
-        ("Complexity",      report.complexity_score,      _fill_class(report.complexity_score)),
-        ("Pylint",          report.pylint_score,          _fill_class(report.pylint_score)),
+        ("Quality", report.quality_score, _fill_class(report.quality_score)),
+        ("Security", report.security_score, _fill_class(report.security_score)),
+        (
+            "Maintainability",
+            report.maintainability_score,
+            _fill_class(report.maintainability_score),
+        ),
+        ("Complexity", report.complexity_score, _fill_class(report.complexity_score)),
+        ("Pylint", report.pylint_score, _fill_class(report.pylint_score)),
     ]
 
     cc_dist = [
@@ -1360,12 +1476,20 @@ def _render_html(report: AnalysisReport) -> str:
 
     recs = _build_recommendations(report)
 
-    top_complexity = sorted(report.complexity, key=lambda x: x.complexity, reverse=True)[:100]
-    top_security   = sorted(report.security, key=lambda x: {"HIGH": 0, "MEDIUM": 1, "LOW": 2}.get(x.severity, 3))[:200]
-    top_lint       = report.lint[:300]
-    top_dead       = report.dead_code[:200]
-    top_dup        = report.duplicates[:100]
-    top_deps       = sorted(report.dependencies, key=lambda x: {"HIGH": 0, "MEDIUM": 1, "LOW": 2}.get(x.severity, 3))
+    top_complexity = sorted(
+        report.complexity, key=lambda x: x.complexity, reverse=True
+    )[:100]
+    top_security = sorted(
+        report.security,
+        key=lambda x: {"HIGH": 0, "MEDIUM": 1, "LOW": 2}.get(x.severity, 3),
+    )[:200]
+    top_lint = report.lint[:300]
+    top_dead = report.dead_code[:200]
+    top_dup = report.duplicates[:100]
+    top_deps = sorted(
+        report.dependencies,
+        key=lambda x: {"HIGH": 0, "MEDIUM": 1, "LOW": 2}.get(x.severity, 3),
+    )
 
     ctx = dict(
         repo_name=_os.path.basename(report.repo_path) or report.repo_path,
@@ -1383,7 +1507,9 @@ def _render_html(report: AnalysisReport) -> str:
         mi_score_class=_score_color_class(report.maintainability_score),
         pylint_score_class=_score_color_class(report.pylint_score),
         security_count_class=_score_color_class(max(0, 100 - len(report.security) * 5)),
-        deps_count_class=_score_color_class(max(0, 100 - len(report.dependencies) * 10)),
+        deps_count_class=_score_color_class(
+            max(0, 100 - len(report.dependencies) * 10)
+        ),
         # Counts
         complexity_count=len(report.complexity),
         security_count=len(report.security),
@@ -1392,7 +1518,9 @@ def _render_html(report: AnalysisReport) -> str:
         dup_count=len(report.duplicates),
         deps_count=len(report.dependencies),
         # Badge classes
-        complexity_badge_class=_badge_class(len([c for c in report.complexity if c.rank in "EF"])),
+        complexity_badge_class=_badge_class(
+            len([c for c in report.complexity if c.rank in "EF"])
+        ),
         security_badge_class=_badge_class(len(report.security), 1, 5),
         lint_badge_class=_badge_class(len(report.lint), 10, 50),
         deps_badge_class=_badge_class(len(report.dependencies), 1, 3),
@@ -1409,7 +1537,9 @@ def _render_html(report: AnalysisReport) -> str:
         cc_data=cc_data,
         cc_dist=cc_dist,
         sec_sev_counts=[("HIGH", sec_high), ("MEDIUM", sec_med), ("LOW", sec_low)],
-        sec_high=sec_high, sec_med=sec_med, sec_low=sec_low,
+        sec_high=sec_high,
+        sec_med=sec_med,
+        sec_low=sec_low,
         recommendations=recs,
     )
 
@@ -1427,6 +1557,7 @@ def _fill_class(score: float) -> str:
 
 # ─── CSV / JSON export ────────────────────────────────────────────────────────
 
+
 def _export_json(report: AnalysisReport, path: Path) -> None:
     data = asdict(report)
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -1441,15 +1572,41 @@ def _export_csv(report: AnalysisReport, output_dir: Path) -> None:
             for row in rows:
                 w.writerow(asdict(row) if hasattr(row, "__dataclass_fields__") else row)
 
-    write("complexity",    report.complexity,    ["file", "function", "complexity", "rank", "line"])
-    write("security",      report.security,      ["file", "line", "severity", "confidence", "issue_id", "description", "tool"])
-    write("lint",          report.lint,          ["file", "line", "column", "symbol", "message", "category"])
-    write("dead_code",     report.dead_code,     ["file", "line", "kind", "name"])
-    write("duplicates",    report.duplicates,    ["file_a", "start_a", "file_b", "start_b", "lines", "fingerprint"])
-    write("dependencies",  report.dependencies,  ["package", "installed_version", "vulnerability_id", "severity", "description", "fix_version"])
+    write(
+        "complexity",
+        report.complexity,
+        ["file", "function", "complexity", "rank", "line"],
+    )
+    write(
+        "security",
+        report.security,
+        ["file", "line", "severity", "confidence", "issue_id", "description", "tool"],
+    )
+    write(
+        "lint", report.lint, ["file", "line", "column", "symbol", "message", "category"]
+    )
+    write("dead_code", report.dead_code, ["file", "line", "kind", "name"])
+    write(
+        "duplicates",
+        report.duplicates,
+        ["file_a", "start_a", "file_b", "start_b", "lines", "fingerprint"],
+    )
+    write(
+        "dependencies",
+        report.dependencies,
+        [
+            "package",
+            "installed_version",
+            "vulnerability_id",
+            "severity",
+            "description",
+            "fix_version",
+        ],
+    )
 
 
 # ─── Main orchestrator ────────────────────────────────────────────────────────
+
 
 def codeReport(
     repo_path: str,
@@ -1491,7 +1648,7 @@ def codeReport(
     out = Path(output_dir)
     html_dir = out / "html"
     json_dir = out / "json"
-    csv_dir  = out / "csv"
+    csv_dir = out / "csv"
     for d in (out, html_dir, json_dir, csv_dir, out / "assets"):
         d.mkdir(parents=True, exist_ok=True)
 
@@ -1503,8 +1660,7 @@ def codeReport(
     report = AnalysisReport(repo_path=str(repo))
     report.files_analyzed = len(files)
     report.total_lines = sum(
-        len(p.read_text(encoding="utf-8", errors="ignore").splitlines())
-        for p in files
+        len(p.read_text(encoding="utf-8", errors="ignore").splitlines()) for p in files
     )
 
     # Run analysers concurrently
@@ -1536,7 +1692,14 @@ def codeReport(
         log.info("Running dependency analysis (pip-audit/safety)…")
         report.dependencies = DependencyAnalyzer().analyze(repo)
 
-    tasks = [run_complexity, run_security, run_lint, run_dead_code, run_duplicates, run_deps]
+    tasks = [
+        run_complexity,
+        run_security,
+        run_lint,
+        run_dead_code,
+        run_duplicates,
+        run_deps,
+    ]
 
     with ThreadPoolExecutor(max_workers=threads) as pool:
         futures = {pool.submit(t): t.__name__ for t in tasks}
@@ -1577,22 +1740,21 @@ def codeReport(
         _export_csv(report, csv_dir)
 
     summary: Dict[str, Any] = {
-        "quality_score":         report.quality_score,
-        "security_score":        report.security_score,
+        "quality_score": report.quality_score,
+        "security_score": report.security_score,
         "maintainability_score": report.maintainability_score,
-        "complexity_score":      report.complexity_score,
-        "pylint_score":          report.pylint_score,
-        "files_analyzed":        report.files_analyzed,
-        "total_lines":           report.total_lines,
-        "security_issues":       len(report.security),
-        "lint_issues":           len(report.lint),
-        "dead_code_items":       len(report.dead_code),
-        "duplicate_blocks":      len(report.duplicates),
+        "complexity_score": report.complexity_score,
+        "pylint_score": report.pylint_score,
+        "files_analyzed": report.files_analyzed,
+        "total_lines": report.total_lines,
+        "security_issues": len(report.security),
+        "lint_issues": len(report.lint),
+        "dead_code_items": len(report.dead_code),
+        "duplicate_blocks": len(report.duplicates),
         "vulnerable_dependencies": len(report.dependencies),
-        "errors":                report.errors,
-        "html_report":           html_path,
-        "elapsed_seconds":       round(elapsed, 2),
+        "errors": report.errors,
+        "html_report": html_path,
+        "elapsed_seconds": round(elapsed, 2),
     }
 
     return html_path, summary
-

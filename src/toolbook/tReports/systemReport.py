@@ -12,7 +12,7 @@ import wmi
 from bs4 import BeautifulSoup
 
 
-def SystemReport(output_path="advanced_system_report.html",open_report=False):
+def SystemReport(output_path="advanced_system_report.html", open_report=False):
     """
     Create advanced Windows system report HTML
     with modern UI and Chart.js graphs.
@@ -31,7 +31,9 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
         "Version": platform.version(),
         "Machine": platform.machine(),
         "Processor": platform.processor(),
-        "Boot Time": datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
+        "Boot Time": datetime.fromtimestamp(psutil.boot_time()).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        ),
     }
 
     # =====================================================
@@ -42,10 +44,10 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
     cpu_info = {
         "Physical Cores": psutil.cpu_count(logical=False),
         "Total Cores": psutil.cpu_count(logical=True),
-        "Overall CPU Usage": f"{sum(per_core) / len(per_core):.1f}%"
+        "Overall CPU Usage": f"{sum(per_core) / len(per_core):.1f}%",
     }
     cpu_labels_json = json.dumps([f"Core {i}" for i in range(len(per_core))])
-    cpu_data_json   = json.dumps(per_core)
+    cpu_data_json = json.dumps(per_core)
 
     # =====================================================
     # MEMORY INFO — for donut chart
@@ -57,11 +59,13 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
         "Total RAM": f"{memory.total / (1024**3):.2f} GB",
         "Available RAM": f"{memory.available / (1024**3):.2f} GB",
         "Used RAM": f"{memory.used / (1024**3):.2f} GB",
-        "RAM Usage": f"{memory.percent}%"
+        "RAM Usage": f"{memory.percent}%",
     }
-    ram_used_gb   = round(memory.used / (1024**3), 2)
-    ram_free_gb   = round(memory.available / (1024**3), 2)
-    ram_cached_gb = round((memory.total - memory.used - memory.available) / (1024**3), 2)
+    ram_used_gb = round(memory.used / (1024**3), 2)
+    ram_free_gb = round(memory.available / (1024**3), 2)
+    ram_cached_gb = round(
+        (memory.total - memory.used - memory.available) / (1024**3), 2
+    )
 
     # =====================================================
     # GPU INFO
@@ -84,15 +88,15 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
     # STORAGE INFO — for grouped bar chart
     # =====================================================
 
-    disk_rows  = ""
+    disk_rows = ""
     disk_labels = []
-    disk_used   = []
-    disk_free   = []
+    disk_used = []
+    disk_free = []
 
     for partition in psutil.disk_partitions():
         try:
             usage = psutil.disk_usage(partition.mountpoint)
-            pct   = usage.percent
+            pct = usage.percent
             bar_color = "#ef4444" if pct > 85 else "#f59e0b" if pct > 60 else "#22c55e"
             disk_rows += f"""
             <tr>
@@ -115,8 +119,8 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
             continue
 
     disk_labels_json = json.dumps(disk_labels)
-    disk_used_json   = json.dumps(disk_used)
-    disk_free_json   = json.dumps(disk_free)
+    disk_used_json = json.dumps(disk_used)
+    disk_free_json = json.dumps(disk_free)
 
     # =====================================================
     # BATTERY INFO — live stats
@@ -126,10 +130,13 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
     if battery:
         pct = battery.percent
         batt_color = "#ef4444" if pct < 20 else "#f59e0b" if pct < 50 else "#22c55e"
-        time_left  = ("Charging" if battery.power_plugged
-                      else f"{battery.secsleft // 3600}h {(battery.secsleft % 3600) // 60}m"
-                      if battery.secsleft != psutil.POWER_TIME_UNLIMITED
-                      else "Calculating...")
+        time_left = (
+            "Charging"
+            if battery.power_plugged
+            else f"{battery.secsleft // 3600}h {(battery.secsleft % 3600) // 60}m"
+            if battery.secsleft != psutil.POWER_TIME_UNLIMITED
+            else "Calculating..."
+        )
         live_battery_html = f"""
         <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
             <div class="stat-card">
@@ -143,7 +150,7 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
                 <div class="stat-icon" style="background:#1e2e3a; color:#4f8ef7;">⚡</div>
                 <div class="stat-body">
                     <div class="stat-label">Status</div>
-                    <div class="stat-value">{'Plugged In' if battery.power_plugged else 'On Battery'}</div>
+                    <div class="stat-value">{"Plugged In" if battery.power_plugged else "On Battery"}</div>
                 </div>
             </div>
             <div class="stat-card">
@@ -164,22 +171,19 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
     # BATTERY HEALTH — powercfg report
     # =====================================================
 
-    design_capacity      = 0
+    design_capacity = 0
     full_charge_capacity = 0
-    cycle_count          = "Unknown"
-    battery_health       = 0.0
-    battery_condition    = "Unknown"
-    capacity_loss        = 0
-    powercfg_ok          = False
+    cycle_count = "Unknown"
+    battery_health = 0.0
+    battery_condition = "Unknown"
+    capacity_loss = 0
+    powercfg_ok = False
 
     try:
         _tmp_report = Path(tempfile.gettempdir()) / "_sr_battery_report.html"
         _cmd = f'powercfg /batteryreport /output "{_tmp_report}"'
         result = subprocess.run(
-            _cmd,
-            shell=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            _cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
         if result.returncode == 0 and _tmp_report.exists():
             with open(_tmp_report, "r", encoding="utf-8", errors="ignore") as _f:
@@ -190,13 +194,13 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
             _fm = re.search(r"FULL CHARGE CAPACITY\s+([\d,]+)\s+mWh", _text)
             _cm = re.search(r"CYCLE COUNT\s+(\d+)", _text)
 
-            design_capacity      = int(_dm.group(1).replace(",", "")) if _dm else 0
+            design_capacity = int(_dm.group(1).replace(",", "")) if _dm else 0
             full_charge_capacity = int(_fm.group(1).replace(",", "")) if _fm else 0
-            cycle_count          = int(_cm.group(1)) if _cm else "Unknown"
+            cycle_count = int(_cm.group(1)) if _cm else "Unknown"
 
             if design_capacity > 0:
-                battery_health  = (full_charge_capacity / design_capacity) * 100
-                capacity_loss   = design_capacity - full_charge_capacity
+                battery_health = (full_charge_capacity / design_capacity) * 100
+                capacity_loss = design_capacity - full_charge_capacity
 
             if battery_health >= 90:
                 battery_condition = "Excellent"
@@ -212,16 +216,18 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
         pass
 
     _health_color = (
-        "#ef4444" if battery_health < 60
-        else "#f59e0b" if battery_health < 75
+        "#ef4444"
+        if battery_health < 60
+        else "#f59e0b"
+        if battery_health < 75
         else "#22c55e"
     )
     _condition_color = {
         "Excellent": "#22c55e",
-        "Good":      "#4f8ef7",
-        "Average":   "#f59e0b",
-        "Poor":      "#ef4444",
-        "Unknown":   "#8a95b0",
+        "Good": "#4f8ef7",
+        "Average": "#f59e0b",
+        "Poor": "#ef4444",
+        "Unknown": "#8a95b0",
     }.get(battery_condition, "#8a95b0")
 
     if powercfg_ok:
@@ -292,21 +298,21 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
     all_procs = sorted(
         psutil.process_iter(["pid", "name", "memory_percent"]),
         key=lambda p: p.info["memory_percent"],
-        reverse=True
+        reverse=True,
     )
 
-    proc_top10    = []
-    process_rows  = ""
+    proc_top10 = []
+    process_rows = ""
 
     for proc in all_procs[:25]:
         try:
-            info  = proc.info
-            pct   = info["memory_percent"]
+            info = proc.info
+            pct = info["memory_percent"]
             bar_w = min(pct * 10, 100)
             process_rows += f"""
             <tr>
-                <td class="pid-cell">{info['pid']}</td>
-                <td class="proc-name">{info['name']}</td>
+                <td class="pid-cell">{info["pid"]}</td>
+                <td class="proc-name">{info["name"]}</td>
                 <td><div class="proc-bar-wrap"><div class="proc-bar" style="width:{bar_w}%;"></div></div></td>
                 <td class="pct-cell">{pct:.2f}%</td>
             </tr>"""
@@ -316,7 +322,7 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
             continue
 
     proc_names_json = json.dumps([p["name"] for p in proc_top10])
-    proc_pcts_json  = json.dumps([p["pct"]  for p in proc_top10])
+    proc_pcts_json = json.dumps([p["pct"] for p in proc_top10])
 
     # =====================================================
     # INSTALLED APPS
@@ -342,7 +348,9 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
 
     # --- WiFi: parse key:value pairs into table rows ---
     try:
-        _wifi_raw = subprocess.check_output("netsh wlan show interfaces", shell=True).decode(errors="ignore")
+        _wifi_raw = subprocess.check_output(
+            "netsh wlan show interfaces", shell=True
+        ).decode(errors="ignore")
         wifi_rows = ""
         for line in _wifi_raw.splitlines():
             if ":" in line:
@@ -370,7 +378,7 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
             if len(cols) >= 4:
                 name, display, kind, started = cols[0], cols[1], cols[2], cols[3]
                 status_color = "#22c55e" if started.lower() == "true" else "#ef4444"
-                status_text  = "Running" if started.lower() == "true" else "Stopped"
+                status_text = "Running" if started.lower() == "true" else "Stopped"
                 driver_rows += f"""
                 <tr>
                     <td class="proc-name">{name}</td>
@@ -388,11 +396,15 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
     # =====================================================
 
     startup_items = []
-    startup_folder = os.path.join(os.getenv("APPDATA"), r"Microsoft\Windows\Start Menu\Programs\Startup")
+    startup_folder = os.path.join(
+        os.getenv("APPDATA"), r"Microsoft\Windows\Start Menu\Programs\Startup"
+    )
     if os.path.exists(startup_folder):
         startup_items = os.listdir(startup_folder)
 
-    startup_cards = "".join(f'<div class="startup-chip">{a}</div>' for a in startup_items)
+    startup_cards = "".join(
+        f'<div class="startup-chip">{a}</div>' for a in startup_items
+    )
     if not startup_cards:
         startup_cards = '<p class="empty-message">No startup applications found</p>'
 
@@ -400,8 +412,8 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
     # JUNK FILE SCAN
     # =====================================================
 
-    temp_dirs  = [os.getenv("TEMP"), r"C:\Windows\Temp"]
-    junk_size  = 0
+    temp_dirs = [os.getenv("TEMP"), r"C:\Windows\Temp"]
+    junk_size = 0
     junk_files = 0
     for folder in temp_dirs:
         if not folder:
@@ -409,7 +421,7 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
         for root, dirs, files in os.walk(folder):
             for file in files:
                 try:
-                    junk_size  += os.path.getsize(os.path.join(root, file))
+                    junk_size += os.path.getsize(os.path.join(root, file))
                     junk_files += 1
                 except Exception:
                     continue
@@ -421,9 +433,13 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
     # =====================================================
 
     try:
-        activation = subprocess.check_output(
-            'cscript //Nologo "%windir%\\system32\\slmgr.vbs" /xpr', shell=True
-        ).decode(errors="ignore").strip()
+        activation = (
+            subprocess.check_output(
+                'cscript //Nologo "%windir%\\system32\\slmgr.vbs" /xpr', shell=True
+            )
+            .decode(errors="ignore")
+            .strip()
+        )
     except Exception:
         activation = "Unable to fetch activation status"
 
@@ -431,20 +447,40 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
     # HEALTH SCORE
     # =====================================================
 
-    cpu_overall  = sum(per_core) / len(per_core)
-    health_score = round(max(0, 100 - cpu_overall * 0.2 - memory.percent * 0.2 - psutil.disk_usage("/").percent * 0.1), 1)
-    health_color = "#ef4444" if health_score < 50 else "#f59e0b" if health_score < 75 else "#22c55e"
-    health_label = "Poor" if health_score < 50 else "Fair" if health_score < 75 else "Good"
+    cpu_overall = sum(per_core) / len(per_core)
+    health_score = round(
+        max(
+            0,
+            100
+            - cpu_overall * 0.2
+            - memory.percent * 0.2
+            - psutil.disk_usage("/").percent * 0.1,
+        ),
+        1,
+    )
+    health_color = (
+        "#ef4444"
+        if health_score < 50
+        else "#f59e0b"
+        if health_score < 75
+        else "#22c55e"
+    )
+    health_label = (
+        "Poor" if health_score < 50 else "Fair" if health_score < 75 else "Good"
+    )
 
     # =====================================================
     # KV TABLE HELPER
     # =====================================================
 
     def kv_rows(data):
-        return "".join(f'<tr><td class="kv-key">{k}</td><td class="kv-val">{v}</td></tr>' for k, v in data.items())
+        return "".join(
+            f'<tr><td class="kv-key">{k}</td><td class="kv-val">{v}</td></tr>'
+            for k, v in data.items()
+        )
 
     report_time = datetime.now().strftime("%A, %B %d %Y at %H:%M:%S")
-    hostname    = platform.node()
+    hostname = platform.node()
 
     # =====================================================
     # HTML
@@ -910,4 +946,3 @@ tabs.forEach(t => t.addEventListener('click', e => {{
         webbrowser.open(f"file:///{os.path.abspath(output_path)}")
 
     return os.path.abspath(output_path)
-

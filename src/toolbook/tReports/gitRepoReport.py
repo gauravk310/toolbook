@@ -55,10 +55,13 @@ except ImportError:
 try:
     # pyrefly: ignore [missing-import]
     import plotly.graph_objects as go  # noqa: F401
+
     # pyrefly: ignore [missing-import]
     import plotly.express as px  # noqa: F401
+
     # pyrefly: ignore [missing-import]
     from plotly.subplots import make_subplots  # noqa: F401
+
     HAS_PLOTLY = True
 except ImportError:
     HAS_PLOTLY = False
@@ -75,6 +78,7 @@ log = logging.getLogger("github-intel")
 # ═══════════════════════════════════════════════════════════════════════════════
 # Data classes
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @dataclass
 class ContributorInfo:
@@ -121,6 +125,7 @@ class RepoSummary:
 # GitHub API client
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class GitHubClient:
     BASE = "https://api.github.com"
 
@@ -133,8 +138,9 @@ class GitHubClient:
         if token:
             headers["Authorization"] = f"Bearer {token}"
         self.session.headers.update(headers)
-        retry = Retry(total=5, backoff_factor=1,
-                      status_forcelist=[429, 500, 502, 503, 504])
+        retry = Retry(
+            total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
+        )
         self.session.mount("https://", HTTPAdapter(max_retries=retry))
 
     def _get(self, path: str, params: dict | None = None) -> Any:
@@ -152,8 +158,9 @@ class GitHubClient:
             r.raise_for_status()
             return r.json()
 
-    def paginate(self, path: str, params: dict | None = None,
-                 max_pages: int = 10) -> list:
+    def paginate(
+        self, path: str, params: dict | None = None, max_pages: int = 10
+    ) -> list:
         params = dict(params or {})
         params.setdefault("per_page", 100)
         results: list = []
@@ -180,19 +187,22 @@ class GitHubClient:
         return self.paginate(f"/repos/{owner}/{repo}/contributors", max_pages=5)
 
     def get_commits(self, owner: str, repo: str) -> list:
-        return self.paginate(f"/repos/{owner}/{repo}/commits",
-                             params={"per_page": 100}, max_pages=10)
+        return self.paginate(
+            f"/repos/{owner}/{repo}/commits", params={"per_page": 100}, max_pages=10
+        )
 
     def get_languages(self, owner: str, repo: str) -> dict:
         return self._get(f"/repos/{owner}/{repo}/languages") or {}
 
     def get_pulls(self, owner: str, repo: str, state: str = "all") -> list:
-        return self.paginate(f"/repos/{owner}/{repo}/pulls",
-                             params={"state": state}, max_pages=5)
+        return self.paginate(
+            f"/repos/{owner}/{repo}/pulls", params={"state": state}, max_pages=5
+        )
 
     def get_issues(self, owner: str, repo: str) -> list:
-        return self.paginate(f"/repos/{owner}/{repo}/issues",
-                             params={"state": "all"}, max_pages=5)
+        return self.paginate(
+            f"/repos/{owner}/{repo}/issues", params={"state": "all"}, max_pages=5
+        )
 
     def get_releases(self, owner: str, repo: str) -> list:
         return self.paginate(f"/repos/{owner}/{repo}/releases", max_pages=3)
@@ -216,6 +226,7 @@ class GitHubClient:
 # Analysis modules
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _parse_repo_url(url: str) -> tuple[str, str]:
     """Extract owner and repo name from GitHub URL."""
     parsed = urlparse(url.rstrip("/"))
@@ -225,15 +236,14 @@ def _parse_repo_url(url: str) -> tuple[str, str]:
     return parts[0], parts[1].removesuffix(".git")
 
 
-def analyze_repo_overview(client: GitHubClient,
-                           owner: str, repo: str) -> dict:
+def analyze_repo_overview(client: GitHubClient, owner: str, repo: str) -> dict:
     log.info("📊 Fetching repository overview …")
     data = client.get_repo(owner, repo)
     topics = client.get_topics(owner, repo)
 
     created = data.get("created_at", "")
     updated = data.get("updated_at", "")
-    pushed  = data.get("pushed_at", "")
+    pushed = data.get("pushed_at", "")
 
     # Age-based activity score
     age_days = 0
@@ -246,11 +256,11 @@ def analyze_repo_overview(client: GitHubClient,
         idle_days = (datetime.now(timezone.utc) - pushed_dt).days
 
     # Health score heuristic
-    stars     = data.get("stargazers_count", 0)
-    forks     = data.get("forks_count", 0)
-    has_desc  = bool(data.get("description"))
-    has_lic   = bool(data.get("license"))
-    has_wiki  = bool(data.get("has_wiki"))
+    stars = data.get("stargazers_count", 0)
+    forks = data.get("forks_count", 0)
+    has_desc = bool(data.get("description"))
+    has_lic = bool(data.get("license"))
+    has_wiki = bool(data.get("has_wiki"))
 
     health = 50
     if has_desc:
@@ -294,8 +304,9 @@ def analyze_repo_overview(client: GitHubClient,
     }
 
 
-def analyze_contributors(client: GitHubClient,
-                          owner: str, repo: str) -> list[ContributorInfo]:
+def analyze_contributors(
+    client: GitHubClient, owner: str, repo: str
+) -> list[ContributorInfo]:
     log.info("👥 Analyzing contributors …")
     raw = client.get_contributors(owner, repo)
     total = sum(c.get("contributions", 0) for c in raw) or 1
@@ -311,21 +322,25 @@ def analyze_contributors(client: GitHubClient,
     ]
 
 
-def analyze_commits(client: GitHubClient,
-                    owner: str, repo: str) -> dict:
+def analyze_commits(client: GitHubClient, owner: str, repo: str) -> dict:
     log.info("📈 Analyzing commit trends …")
     commits = client.get_commits(owner, repo)
     if not commits:
-        return {"total": 0, "by_day": {}, "by_hour": {}, "by_month": {},
-                "by_author": {}, "velocity_per_week": 0, "heatmap_data": []}
+        return {
+            "total": 0,
+            "by_day": {},
+            "by_hour": {},
+            "by_month": {},
+            "by_author": {},
+            "velocity_per_week": 0,
+            "heatmap_data": [],
+        }
 
     dates = []
     hours: list[int] = []
     authors: list[str] = []
     for c in commits:
-        raw_date = (c.get("commit", {})
-                     .get("author", {})
-                     .get("date", ""))
+        raw_date = c.get("commit", {}).get("author", {}).get("date", "")
         if raw_date:
             try:
                 dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
@@ -333,13 +348,14 @@ def analyze_commits(client: GitHubClient,
                 hours.append(dt.hour)
                 authors.append(
                     c.get("author", {}).get("login", "unknown")
-                    if c.get("author") else "unknown"
+                    if c.get("author")
+                    else "unknown"
                 )
             except ValueError:
                 pass
 
-    by_day   = Counter(d.strftime("%Y-%m-%d") for d in dates)
-    by_hour  = Counter(h for h in hours)
+    by_day = Counter(d.strftime("%Y-%m-%d") for d in dates)
+    by_hour = Counter(h for h in hours)
     by_month = Counter(d.strftime("%Y-%m") for d in dates)
     by_author = Counter(authors)
 
@@ -350,12 +366,14 @@ def analyze_commits(client: GitHubClient,
     for week in range(52):
         for dow in range(7):
             day = today - timedelta(weeks=week, days=dow)
-            heatmap.append({
-                "date": str(day),
-                "week": week,
-                "dow": dow,
-                "count": 1 if day in date_set else 0,
-            })
+            heatmap.append(
+                {
+                    "date": str(day),
+                    "week": week,
+                    "dow": dow,
+                    "count": 1 if day in date_set else 0,
+                }
+            )
 
     # velocity: commits per week over last 12 weeks
     cutoff = datetime.now(timezone.utc) - timedelta(weeks=12)
@@ -370,15 +388,12 @@ def analyze_commits(client: GitHubClient,
         "by_author": dict(by_author.most_common(10)),
         "velocity_per_week": velocity,
         "heatmap_data": heatmap,
-        "most_active_hour": (max(by_hour, key=by_hour.get)
-                             if by_hour else 0),
-        "most_active_day": (max(by_day, key=by_day.get)
-                            if by_day else "N/A"),
+        "most_active_hour": (max(by_hour, key=by_hour.get) if by_hour else 0),
+        "most_active_day": (max(by_day, key=by_day.get) if by_day else "N/A"),
     }
 
 
-def analyze_languages(client: GitHubClient,
-                       owner: str, repo: str) -> dict:
+def analyze_languages(client: GitHubClient, owner: str, repo: str) -> dict:
     log.info("🔤 Detecting languages …")
     raw = client.get_languages(owner, repo)
     total = sum(raw.values()) or 1
@@ -390,38 +405,38 @@ def analyze_languages(client: GitHubClient,
 
 # Technology fingerprinting
 _TECH_FINGERPRINTS: dict[str, list[str]] = {
-    "React":      ["react", "react-dom"],
-    "Next.js":    ["next"],
-    "Vue":        ["vue"],
-    "Angular":    ["@angular/core"],
-    "Svelte":     ["svelte"],
-    "Node.js":    ["express", "koa", "fastify", "hapi"],
-    "Django":     ["django"],
-    "Flask":      ["flask"],
-    "FastAPI":    ["fastapi"],
-    "Celery":     ["celery"],
+    "React": ["react", "react-dom"],
+    "Next.js": ["next"],
+    "Vue": ["vue"],
+    "Angular": ["@angular/core"],
+    "Svelte": ["svelte"],
+    "Node.js": ["express", "koa", "fastify", "hapi"],
+    "Django": ["django"],
+    "Flask": ["flask"],
+    "FastAPI": ["fastapi"],
+    "Celery": ["celery"],
     "SQLAlchemy": ["sqlalchemy"],
-    "Docker":     ["dockerfile", "docker-compose"],
+    "Docker": ["dockerfile", "docker-compose"],
     "Kubernetes": ["kubernetes", "kubectl", "helm"],
-    "Terraform":  ["terraform"],
+    "Terraform": ["terraform"],
     "PostgreSQL": ["psycopg2", "pg"],
-    "Redis":      ["redis"],
-    "GraphQL":    ["graphql", "apollo"],
+    "Redis": ["redis"],
+    "GraphQL": ["graphql", "apollo"],
     "TypeScript": ["typescript", "ts-node"],
-    "Tailwind":   ["tailwindcss"],
-    "Pytest":     ["pytest"],
-    "Jest":       ["jest"],
+    "Tailwind": ["tailwindcss"],
+    "Pytest": ["pytest"],
+    "Jest": ["jest"],
 }
 
 
-def detect_technologies(client: GitHubClient,
-                         owner: str, repo: str,
-                         languages: dict) -> dict:
+def detect_technologies(
+    client: GitHubClient, owner: str, repo: str, languages: dict
+) -> dict:
     log.info("🛠️  Detecting technologies …")
     detected: set[str] = set()
     ci_tools: set[str] = []
     has_docker = False
-    has_k8s    = False
+    has_k8s = False
 
     # Language-based detection
     for lang in languages:
@@ -437,7 +452,9 @@ def detect_technologies(client: GitHubClient,
         try:
             item = client.get_contents(owner, repo, path)
             if isinstance(item, dict) and item.get("content"):
-                return base64.b64decode(item["content"]).decode("utf-8", errors="ignore")
+                return base64.b64decode(item["content"]).decode(
+                    "utf-8", errors="ignore"
+                )
         except Exception:
             pass
         return ""
@@ -447,8 +464,7 @@ def detect_technologies(client: GitHubClient,
     if pkg_json:
         try:
             pkg = json.loads(pkg_json)
-            all_deps = {**pkg.get("dependencies", {}),
-                        **pkg.get("devDependencies", {})}
+            all_deps = {**pkg.get("dependencies", {}), **pkg.get("devDependencies", {})}
             for tech, keys in _TECH_FINGERPRINTS.items():
                 if any(k in all_deps for k in keys):
                     detected.add(tech)
@@ -527,21 +543,20 @@ def _devops_score(techs: set, workflows: list) -> int:
     return min(100, score)
 
 
-def analyze_pull_requests(client: GitHubClient,
-                           owner: str, repo: str) -> PRStats:
+def analyze_pull_requests(client: GitHubClient, owner: str, repo: str) -> PRStats:
     log.info("🔀 Analyzing pull requests …")
     pulls = client.get_pulls(owner, repo)
     if not pulls:
         return PRStats()
 
-    open_prs   = [p for p in pulls if p.get("state") == "open"]
+    open_prs = [p for p in pulls if p.get("state") == "open"]
     closed_prs = [p for p in pulls if p.get("state") == "closed"]
     merged_prs = [p for p in closed_prs if p.get("merged_at")]
 
     merge_times: list[float] = []
     for pr in merged_prs:
         created = pr.get("created_at", "")
-        merged  = pr.get("merged_at", "")
+        merged = pr.get("merged_at", "")
         if created and merged:
             try:
                 c = datetime.fromisoformat(created.replace("Z", "+00:00"))
@@ -563,21 +578,21 @@ def analyze_pull_requests(client: GitHubClient,
     )
 
 
-def analyze_issues(client: GitHubClient,
-                   owner: str, repo: str) -> IssueStats:
+def analyze_issues(client: GitHubClient, owner: str, repo: str) -> IssueStats:
     log.info("🐛 Analyzing issues …")
-    issues = [i for i in client.get_issues(owner, repo)
-              if not i.get("pull_request")]  # exclude PRs
+    issues = [
+        i for i in client.get_issues(owner, repo) if not i.get("pull_request")
+    ]  # exclude PRs
     if not issues:
         return IssueStats()
 
-    open_i   = [i for i in issues if i.get("state") == "open"]
+    open_i = [i for i in issues if i.get("state") == "open"]
     closed_i = [i for i in issues if i.get("state") == "closed"]
 
     close_times: list[float] = []
     for iss in closed_i:
         created = iss.get("created_at", "")
-        closed  = iss.get("closed_at", "")
+        closed = iss.get("closed_at", "")
         if created and closed:
             try:
                 c = datetime.fromisoformat(created.replace("Z", "+00:00"))
@@ -602,8 +617,7 @@ def analyze_issues(client: GitHubClient,
     )
 
 
-def analyze_releases(client: GitHubClient,
-                     owner: str, repo: str) -> dict:
+def analyze_releases(client: GitHubClient, owner: str, repo: str) -> dict:
     log.info("🚀 Analyzing releases …")
     releases = client.get_releases(owner, repo)
     if not releases:
@@ -619,16 +633,18 @@ def analyze_releases(client: GitHubClient,
                 dates.append(dt)
             except ValueError:
                 pass
-        items.append({
-            "name": r.get("name") or r.get("tag_name", ""),
-            "tag": r.get("tag_name", ""),
-            "published_at": pub,
-            "prerelease": r.get("prerelease", False),
-        })
+        items.append(
+            {
+                "name": r.get("name") or r.get("tag_name", ""),
+                "tag": r.get("tag_name", ""),
+                "published_at": pub,
+                "prerelease": r.get("prerelease", False),
+            }
+        )
 
     cadence = 0
     if len(dates) >= 2:
-        spans = [(dates[i] - dates[i+1]).days for i in range(len(dates)-1)]
+        spans = [(dates[i] - dates[i + 1]).days for i in range(len(dates) - 1)]
         cadence = round(sum(spans) / len(spans))
 
     return {
@@ -639,9 +655,9 @@ def analyze_releases(client: GitHubClient,
     }
 
 
-def compute_dependency_risk(client: GitHubClient,
-                             owner: str, repo: str,
-                             languages: dict) -> dict:
+def compute_dependency_risk(
+    client: GitHubClient, owner: str, repo: str, languages: dict
+) -> dict:
     """Heuristic dependency risk without running pip-audit locally."""
     log.info("🔒 Computing dependency risk …")
     score = 50  # baseline
@@ -678,7 +694,9 @@ def compute_dependency_risk(client: GitHubClient,
     try:
         item = client.get_contents(owner, repo, "package.json")
         if isinstance(item, dict) and item.get("content"):
-            pkg_json = base64.b64decode(item["content"]).decode("utf-8", errors="ignore")
+            pkg_json = base64.b64decode(item["content"]).decode(
+                "utf-8", errors="ignore"
+            )
     except Exception:
         pass
 
@@ -696,8 +714,14 @@ def compute_dependency_risk(client: GitHubClient,
             pass
 
     # Bonus for having lock files
-    lockfiles = ["package-lock.json", "yarn.lock", "pnpm-lock.yaml",
-                 "poetry.lock", "Pipfile.lock", "requirements.lock"]
+    lockfiles = [
+        "package-lock.json",
+        "yarn.lock",
+        "pnpm-lock.yaml",
+        "poetry.lock",
+        "Pipfile.lock",
+        "requirements.lock",
+    ]
     found_lock = False
     for lf in lockfiles:
         try:
@@ -725,8 +749,7 @@ def compute_dependency_risk(client: GitHubClient,
     }
 
 
-def compute_security_risk(repo_info: dict, dep_risk: dict,
-                           tech: dict) -> int:
+def compute_security_risk(repo_info: dict, dep_risk: dict, tech: dict) -> int:
     score = 80  # start optimistic
     if repo_info.get("license") in ("None", None):
         score -= 10
@@ -1377,55 +1400,97 @@ Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
 # Report builder
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _score_dash(value: int, color: str, label: str) -> dict:
     circumference = 2 * math.pi * 38  # ≈ 238.76
     dash = round(circumference * value / 100, 1)
     return {"value": value, "dash": dash, "color": color, "label": label}
 
 
-def _build_recommendations(repo_info: dict, dep: dict, tech: dict,
-                            prs: PRStats, issues: IssueStats) -> list[dict]:
+def _build_recommendations(
+    repo_info: dict, dep: dict, tech: dict, prs: PRStats, issues: IssueStats
+) -> list[dict]:
     recs = []
 
     if not repo_info.get("license") or repo_info["license"] == "None":
-        recs.append({"icon": "⚖️", "level": "warn",
-                     "title": "Add a license",
-                     "body": "Repository has no license. This limits open-source usability."})
+        recs.append(
+            {
+                "icon": "⚖️",
+                "level": "warn",
+                "title": "Add a license",
+                "body": "Repository has no license. This limits open-source usability.",
+            }
+        )
 
     if repo_info.get("idle_days", 0) > 180:
-        recs.append({"icon": "💤", "level": "crit",
-                     "title": "Repository appears inactive",
-                     "body": f"No commits pushed in the last {repo_info['idle_days']} days."})
+        recs.append(
+            {
+                "icon": "💤",
+                "level": "crit",
+                "title": "Repository appears inactive",
+                "body": f"No commits pushed in the last {repo_info['idle_days']} days.",
+            }
+        )
 
     if not dep.get("has_lock_file"):
-        recs.append({"icon": "📦", "level": "warn",
-                     "title": "Add a dependency lock file",
-                     "body": "Lock files ensure reproducible builds. Consider poetry.lock, package-lock.json, etc."})
+        recs.append(
+            {
+                "icon": "📦",
+                "level": "warn",
+                "title": "Add a dependency lock file",
+                "body": "Lock files ensure reproducible builds. Consider poetry.lock, package-lock.json, etc.",
+            }
+        )
 
     if dep.get("unpinned", 0) > 5:
-        recs.append({"icon": "🔒", "level": "warn",
-                     "title": "Pin dependencies",
-                     "body": f"{dep['unpinned']} unpinned dependencies found. Pin versions for stability."})
+        recs.append(
+            {
+                "icon": "🔒",
+                "level": "warn",
+                "title": "Pin dependencies",
+                "body": f"{dep['unpinned']} unpinned dependencies found. Pin versions for stability.",
+            }
+        )
 
     if not tech.get("has_docker") and tech.get("devops_score", 0) < 30:
-        recs.append({"icon": "🐳", "level": "",
-                     "title": "Containerise the application",
-                     "body": "Adding a Dockerfile improves portability and deployment consistency."})
+        recs.append(
+            {
+                "icon": "🐳",
+                "level": "",
+                "title": "Containerise the application",
+                "body": "Adding a Dockerfile improves portability and deployment consistency.",
+            }
+        )
 
     if "GitHub Actions" not in tech.get("technologies", []):
-        recs.append({"icon": "⚙️", "level": "",
-                     "title": "Set up CI/CD",
-                     "body": "No CI workflows detected. GitHub Actions can automate testing and deployment."})
+        recs.append(
+            {
+                "icon": "⚙️",
+                "level": "",
+                "title": "Set up CI/CD",
+                "body": "No CI workflows detected. GitHub Actions can automate testing and deployment.",
+            }
+        )
 
     if prs.avg_merge_hours > 168:
-        recs.append({"icon": "⏱️", "level": "warn",
-                     "title": "Improve PR review velocity",
-                     "body": f"Average merge time is {prs.avg_merge_hours:.0f}h (> 1 week). Consider code review SLAs."})
+        recs.append(
+            {
+                "icon": "⏱️",
+                "level": "warn",
+                "title": "Improve PR review velocity",
+                "body": f"Average merge time is {prs.avg_merge_hours:.0f}h (> 1 week). Consider code review SLAs.",
+            }
+        )
 
     if not repo_info.get("description"):
-        recs.append({"icon": "📝", "level": "",
-                     "title": "Add a repository description",
-                     "body": "A clear description improves discoverability."})
+        recs.append(
+            {
+                "icon": "📝",
+                "level": "",
+                "title": "Add a repository description",
+                "body": "A clear description improves discoverability.",
+            }
+        )
 
     return recs
 
@@ -1448,12 +1513,12 @@ def _render_report(data: dict, output_path: Path) -> None:
     output_path.write_text(html, encoding="utf-8")
 
 
-def _build_chart_data(commits: dict, languages: dict,
-                       contributors: list[ContributorInfo],
-                       releases: dict) -> dict:
+def _build_chart_data(
+    commits: dict, languages: dict, contributors: list[ContributorInfo], releases: dict
+) -> dict:
     # Monthly
     monthly_labels = list(commits.get("by_month", {}).keys())
-    monthly_data   = list(commits.get("by_month", {}).values())
+    monthly_data = list(commits.get("by_month", {}).values())
 
     # Hourly (all 24 hours)
     by_hour = commits.get("by_hour", {})
@@ -1461,11 +1526,11 @@ def _build_chart_data(commits: dict, languages: dict,
 
     # Languages
     lang_labels = list(languages.keys())[:8]
-    lang_data   = [languages[lang]["pct"] for lang in lang_labels]
+    lang_data = [languages[lang]["pct"] for lang in lang_labels]
 
     # Contributors
     contrib_labels = [c.login for c in contributors[:10]]
-    contrib_data   = [c.contributions for c in contributors[:10]]
+    contrib_data = [c.contributions for c in contributors[:10]]
 
     # Releases by month
     release_counts: Counter = Counter()
@@ -1474,24 +1539,25 @@ def _build_chart_data(commits: dict, languages: dict,
         if d:
             release_counts[d] += 1
     release_labels = sorted(release_counts.keys())[-18:]
-    release_data   = [release_counts[rel] for rel in release_labels]
+    release_data = [release_counts[rel] for rel in release_labels]
 
     return {
         "monthly_labels": monthly_labels,
-        "monthly_data":   monthly_data,
-        "hour_data":      hour_data,
-        "lang_labels":    lang_labels,
-        "lang_data":      lang_data,
+        "monthly_data": monthly_data,
+        "hour_data": hour_data,
+        "lang_labels": lang_labels,
+        "lang_data": lang_data,
         "contrib_labels": contrib_labels,
-        "contrib_data":   contrib_data,
+        "contrib_data": contrib_data,
         "release_labels": release_labels,
-        "release_data":   release_data,
+        "release_data": release_data,
     }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Main entry point
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def gitRepoReport(
     repo_url: str,
@@ -1521,37 +1587,37 @@ def gitRepoReport(
     log.info("🔍 Analysing %s/%s …", owner, repo_name)
 
     # ── Setup directories ──
-    base   = Path(output_dir)
+    base = Path(output_dir)
     base.mkdir(parents=True, exist_ok=True)
 
     client = GitHubClient(token=token)
 
     # ── Collect data ──
-    repo_info    = analyze_repo_overview(client, owner, repo_name)
+    repo_info = analyze_repo_overview(client, owner, repo_name)
     contributors = analyze_contributors(client, owner, repo_name)
-    commits      = analyze_commits(client, owner, repo_name)
-    languages    = analyze_languages(client, owner, repo_name)
-    tech         = detect_technologies(client, owner, repo_name, languages)
-    prs          = analyze_pull_requests(client, owner, repo_name)
-    issues       = analyze_issues(client, owner, repo_name)
-    releases     = analyze_releases(client, owner, repo_name)
-    dep          = compute_dependency_risk(client, owner, repo_name, languages)
+    commits = analyze_commits(client, owner, repo_name)
+    languages = analyze_languages(client, owner, repo_name)
+    tech = detect_technologies(client, owner, repo_name, languages)
+    prs = analyze_pull_requests(client, owner, repo_name)
+    issues = analyze_issues(client, owner, repo_name)
+    releases = analyze_releases(client, owner, repo_name)
+    dep = compute_dependency_risk(client, owner, repo_name, languages)
 
     security_score = compute_security_risk(repo_info, dep, tech)
-    health_score   = repo_info["health_score"]
-    dep_score      = dep["score"]
+    health_score = repo_info["health_score"]
+    dep_score = dep["score"]
 
     # ── Summary dict ──
     summary: dict = {
         "repository_health_score": health_score,
-        "security_risk_score":     security_score,
-        "dependency_risk_score":   dep_score,
-        "contributors":            len(contributors),
-        "commits":                 commits["total"],
-        "open_issues":             repo_info["open_issues"],
-        "pull_requests":           prs.total,
-        "top_languages":           list(languages.keys())[:5],
-        "detected_technologies":   tech["technologies"],
+        "security_risk_score": security_score,
+        "dependency_risk_score": dep_score,
+        "contributors": len(contributors),
+        "commits": commits["total"],
+        "open_issues": repo_info["open_issues"],
+        "pull_requests": prs.total,
+        "top_languages": list(languages.keys())[:5],
+        "detected_technologies": tech["technologies"],
     }
 
     # ── Chart data ──
@@ -1559,9 +1625,9 @@ def gitRepoReport(
 
     # ── Scores for rings ──
     scores = [
-        _score_dash(health_score,  "#3fb950", "Health Score"),
-        _score_dash(security_score,"#58a6ff", "Security Score"),
-        _score_dash(dep_score,     "#d29922", "Dep. Health"),
+        _score_dash(health_score, "#3fb950", "Health Score"),
+        _score_dash(security_score, "#58a6ff", "Security Score"),
+        _score_dash(dep_score, "#d29922", "Dep. Health"),
         _score_dash(tech["devops_score"], "#bc8cff", "DevOps Maturity"),
     ]
 
@@ -1571,16 +1637,16 @@ def gitRepoReport(
     report_path = base / f"{owner}-{repo_name}.html"
     _render_report(
         {
-            "repo":         repo_info,
+            "repo": repo_info,
             "contributors": contributors,
-            "commits":      commits,
-            "languages":    languages,
-            "tech":         tech,
-            "prs":          prs,
-            "issues":       issues,
-            "releases":     releases,
-            "dep":          dep,
-            "scores":       scores,
+            "commits": commits,
+            "languages": languages,
+            "tech": tech,
+            "prs": prs,
+            "issues": issues,
+            "releases": releases,
+            "dep": dep,
+            "scores": scores,
             "recommendations": recommendations,
             "heatmap_json": commits.get("heatmap_data", []),
             **chart,
@@ -1596,6 +1662,7 @@ def gitRepoReport(
 # CLI
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _cli():
     parser = argparse.ArgumentParser(
         description="GitHub Repository Intelligence Report Generator",
@@ -1603,8 +1670,8 @@ def _cli():
         epilog=__doc__,
     )
     parser.add_argument("repo_url", help="GitHub repository URL")
-    parser.add_argument("--token",   help="GitHub personal access token")
-    parser.add_argument("--output",  default="reports", help="Output directory")
+    parser.add_argument("--token", help="GitHub personal access token")
+    parser.add_argument("--output", default="reports", help="Output directory")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -1617,12 +1684,12 @@ def _cli():
         verbose=args.verbose,
     )
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print(f"  Report path : {path}")
     print("  Summary:")
     for k, v in summary.items():
         print(f"    {k:<30} {v}")
-    print("="*60)
+    print("=" * 60)
 
 
 if __name__ == "__main__":

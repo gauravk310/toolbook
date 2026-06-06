@@ -1,4 +1,13 @@
-from .PDF import PDFMerger, PDFSplit, PDFIMGExtractor, PDFToDocx, DocxToPDF, PDFWatermark, PDFInfo, PDFRotate
+from .PDF import (
+    PDFMerger,
+    PDFSplit,
+    PDFIMGExtractor,
+    PDFToDocx,
+    DocxToPDF,
+    PDFWatermark,
+    PDFInfo,
+    PDFRotate,
+)
 
 __all__ = [
     "PDFMerger",
