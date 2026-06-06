@@ -145,7 +145,7 @@ def pdf_extract_img(
         _open_path(result)
 
 
-@pdf_app.command("convert-docx")
+@pdf_app.command("pdf-to-docx")
 def pdf_convert_docx(
     pdf_file: str = typer.Argument(..., help="Path to the PDF file to convert"),
     output_path: str = typer.Argument(
@@ -163,9 +163,9 @@ def pdf_convert_docx(
     Convert a PDF to DOCX format.
 
     Examples:
-        toolbook doc pdf convert-docx ./document.pdf
-        toolbook doc pdf convert-docx ./document.pdf . --open
-        toolbook doc pdf convert-docx ./document.pdf ./output --open
+        toolbook doc pdf pdf-to-docx ./document.pdf
+        toolbook doc pdf pdf-to-docx ./document.pdf . --open
+        toolbook doc pdf pdf-to-docx ./document.pdf ./output --open
     """
 
     def _log(msg: str) -> None:
@@ -183,7 +183,7 @@ def pdf_convert_docx(
         _open_path(result)
 
 
-@pdf_app.command("convert-pdf")
+@pdf_app.command("docx-to-pdf")
 def pdf_convert_pdf(
     docx_file: str = typer.Argument(..., help="Path to the DOCX file to convert"),
     output_path: str = typer.Argument(
@@ -203,9 +203,9 @@ def pdf_convert_pdf(
     Requires Microsoft Word to be installed on Windows.
 
     Examples:
-        toolbook doc pdf convert-pdf ./document.docx
-        toolbook doc pdf convert-pdf ./document.docx . --open
-        toolbook doc pdf convert-pdf ./document.docx ./output --open
+        toolbook doc pdf docx-to-pdf ./document.docx
+        toolbook doc pdf docx-to-pdf ./document.docx . --open
+        toolbook doc pdf docx-to-pdf ./document.docx ./output --open
     """
 
     def _log(msg: str) -> None:

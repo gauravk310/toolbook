@@ -162,12 +162,12 @@ result = PDFIMGExtractor("./document.pdf", ".", log=print)
 
 ---
 
-### `doc pdf convert-docx`
+### `doc pdf pdf-to-docx`
 Convert a PDF file to DOCX format.
 The output file is saved as `<pdf-name>.docx` in the chosen directory.
 
 ```bash
-toolbook doc pdf convert-docx <PDF_FILE> [OUTPUT_PATH] [--open]
+toolbook doc pdf pdf-to-docx <PDF_FILE> [OUTPUT_PATH] [--open]
 ```
 
 | Argument | Required | Description |
@@ -179,13 +179,13 @@ toolbook doc pdf convert-docx <PDF_FILE> [OUTPUT_PATH] [--open]
 **Examples:**
 ```bash
 # Save to ~/Downloads/
-toolbook doc pdf convert-docx ./document.pdf
+toolbook doc pdf pdf-to-docx ./document.pdf
 
 # Save to current directory and open the file
-toolbook doc pdf convert-docx ./document.pdf . --open
+toolbook doc pdf pdf-to-docx ./document.pdf . --open
 
 # Save to custom path
-toolbook doc pdf convert-docx ./document.pdf ./output --open
+toolbook doc pdf pdf-to-docx ./document.pdf ./output --open
 ```
 
 **Python:**
@@ -214,12 +214,12 @@ result = PDFToDocx("./document.pdf", ".", log=print)
 
 ---
 
-### `doc pdf convert-pdf`
+### `doc pdf docx-to-pdf`
 Convert a DOCX file to PDF format using the Microsoft Word backend.
 Requires Microsoft Word to be installed on Windows.
 
 ```bash
-toolbook doc pdf convert-pdf <DOCX_FILE> [OUTPUT_PATH] [--open]
+toolbook doc pdf docx-to-pdf <DOCX_FILE> [OUTPUT_PATH] [--open]
 ```
 
 | Argument | Required | Description |
@@ -231,13 +231,13 @@ toolbook doc pdf convert-pdf <DOCX_FILE> [OUTPUT_PATH] [--open]
 **Examples:**
 ```bash
 # Save to ~/Downloads/
-toolbook doc pdf convert-pdf ./document.docx
+toolbook doc pdf docx-to-pdf ./document.docx
 
 # Save to current directory and open the file
-toolbook doc pdf convert-pdf ./document.docx . --open
+toolbook doc pdf docx-to-pdf ./document.docx . --open
 
 # Save to custom path
-toolbook doc pdf convert-pdf ./document.docx ./output --open
+toolbook doc pdf docx-to-pdf ./document.docx ./output --open
 ```
 
 **Python:**
