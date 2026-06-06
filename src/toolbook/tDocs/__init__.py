@@ -7,7 +7,10 @@ from .PDF import (
     PDFWatermark,
     PDFInfo,
     PDFRotate,
+    IMGsToPDF,
+    PDFToIMGs,
 )
+from .IMG import IMGConvertToPNG, IMGConvertToJPG
 
 __all__ = [
     "PDFMerger",
@@ -18,4 +21,8 @@ __all__ = [
     "PDFWatermark",
     "PDFInfo",
     "PDFRotate",
+    "IMGsToPDF",
+    "PDFToIMGs",
+    "IMGConvertToPNG",
+    "IMGConvertToJPG",
 ]

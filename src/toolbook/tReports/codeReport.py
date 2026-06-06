@@ -28,12 +28,12 @@ from typing import Any, Dict, List, Optional, Tuple
 try:
     from rich.console import Console  # noqa: F401
     from rich.progress import (
-        Progress,
-        SpinnerColumn,
-        TextColumn,
-        BarColumn,
-        TaskProgressColumn,
-    )  # noqa: F401
+        Progress,  # noqa: F401
+        SpinnerColumn,  # noqa: F401
+        TextColumn,  # noqa: F401
+        BarColumn,  # noqa: F401
+        TaskProgressColumn,  # noqa: F401
+    )
     from rich.logging import RichHandler
 
     _RICH = True

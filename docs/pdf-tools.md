@@ -263,3 +263,124 @@ result = DocxToPDF("./document.docx", ".", log=print)
 # ⏳ Converting …
 # ✔  Conversion complete
 ```
+
+---
+
+### `doc pdf imgs-to-pdf`
+Combine all images in a folder into a single PDF file.
+Images are sorted alphabetically and appended in that order.
+The output file is named after the source folder: `<folder-name>.pdf`.
+
+Supported formats: JPEG, PNG, BMP, GIF, TIFF, WEBP.
+
+```bash
+toolbook doc pdf imgs-to-pdf <IMAGES_DIR> [OUTPUT_PATH] [--open]
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `IMAGES_DIR` | Yes | Directory containing the image files to combine |
+| `OUTPUT_PATH` | No | Directory to save the PDF. Omit → `~/Downloads`, `.` → current directory |
+| `--open` | No | Open the generated PDF after saving |
+
+**Examples:**
+```bash
+# Save to ~/Downloads/my-images.pdf
+toolbook doc pdf imgs-to-pdf ./my-images
+
+# Save to current directory and open the file
+toolbook doc pdf imgs-to-pdf ./my-images . --open
+
+# Save to custom path
+toolbook doc pdf imgs-to-pdf ./my-images ./output --open
+```
+
+**Python:**
+```python
+from toolbook.tDocs import IMGsToPDF
+
+# Save to ~/Downloads/my-images.pdf
+result = IMGsToPDF("./my-images")
+print(result)  # ~/Downloads/my-images.pdf
+
+# Save to current directory: ./my-images.pdf
+result = IMGsToPDF("./my-images", ".")
+print(result)  # ./my-images.pdf
+
+# Save to custom path: ./output/my-images.pdf
+result = IMGsToPDF("./my-images", "./output")
+print(result)  # ./output/my-images.pdf
+
+# With live progress logs
+result = IMGsToPDF("./my-images", ".", log=print)
+# 📂 Source folder : /abs/path/my-images
+# 🖼  Images found  : 4
+# 📄 Output        : ./my-images.pdf
+#
+#   [1/4] page1.png
+#   [2/4] page2.png
+#   [3/4] page3.jpg
+#   [4/4] page4.jpg
+#
+# ✔  PDF created
+```
+
+---
+
+### `doc pdf pdf-to-imgs`
+Render every page of a PDF as a JPEG image.
+Pages are saved as `page_1.jpg`, `page_2.jpg` … inside a folder named after the source PDF file.
+
+```bash
+toolbook doc pdf pdf-to-imgs <PDF_FILE> [OUTPUT_PATH] [--dpi INT] [--open]
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `PDF_FILE` | Yes | Path to the PDF file to convert |
+| `OUTPUT_PATH` | No | Base directory for the output folder. Omit → `~/Downloads`, `.` → current directory |
+| `--dpi` | No | Render resolution in DPI (default `150`). Use `300` for print-quality output |
+| `--open` | No | Open the output folder after converting |
+
+**Examples:**
+```bash
+# Save to ~/Downloads/document/
+toolbook doc pdf pdf-to-imgs ./document.pdf
+
+# Save to current directory and open folder
+toolbook doc pdf pdf-to-imgs ./document.pdf . --open
+
+# Save to custom path at 300 DPI
+toolbook doc pdf pdf-to-imgs ./document.pdf ./output --dpi 300 --open
+```
+
+**Python:**
+```python
+from toolbook.tDocs import PDFToIMGs
+
+# Save to ~/Downloads/document/
+result = PDFToIMGs("./document.pdf")
+print(result)  # ~/Downloads/document
+
+# Save to current directory: ./document/
+result = PDFToIMGs("./document.pdf", ".")
+print(result)  # ./document
+
+# Save to custom path at 300 DPI: ./output/document/
+result = PDFToIMGs("./document.pdf", "./output", dpi=300)
+print(result)  # ./output/document
+
+# With live progress logs
+result = PDFToIMGs("./document.pdf", ".", log=print)
+# 📄 Source        : /abs/path/document.pdf
+# 📂 Output folder : ./document
+# 📑 Total pages   : 4
+# 🖼  Resolution    : 150 dpi
+#
+#   [1/4] Saved → page_1.jpg
+#   [2/4] Saved → page_2.jpg
+#   [3/4] Saved → page_3.jpg
+#   [4/4] Saved → page_4.jpg
+#
+# ✔  4 images saved
+```

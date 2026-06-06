@@ -1,12 +1,26 @@
 import os
 import typer
-from toolbook.tDocs import PDFMerger, PDFSplit, PDFIMGExtractor, PDFToDocx, DocxToPDF
+from toolbook.tDocs import (
+    PDFMerger,
+    PDFSplit,
+    PDFIMGExtractor,
+    PDFToDocx,
+    DocxToPDF,
+    IMGsToPDF,
+    PDFToIMGs,
+    IMGConvertToPNG,
+    IMGConvertToJPG,
+)
 
 app = typer.Typer()
 
 # ── pdf sub-group ─────────────────────────────────────────────────────────────
 pdf_app = typer.Typer(help="PDF utilities")
 app.add_typer(pdf_app, name="pdf")
+
+# ── img sub-group ─────────────────────────────────────────────────────────────
+img_app = typer.Typer(help="Image utilities")
+app.add_typer(img_app, name="img")
 
 
 def _open_path(path: str) -> None:
@@ -204,6 +218,173 @@ def pdf_convert_pdf(
         raise typer.Exit(code=1)
 
     typer.secho(f"\n✅ Done — PDF saved to: {result}", fg=typer.colors.GREEN)
+
+    if open_doc:
+        _open_path(result)
+
+
+@pdf_app.command("imgs-to-pdf")
+def pdf_imgs_to_pdf(
+    images_dir: str = typer.Argument(
+        ..., help="Directory containing the image files to combine"
+    ),
+    output_path: str = typer.Argument(
+        None,
+        help=(
+            "Directory where the PDF will be saved. "
+            "Omit to use ~/Downloads, use '.' for the current directory."
+        ),
+    ),
+    open_doc: bool = typer.Option(
+        False, "--open", help="Open the generated PDF after saving"
+    ),
+):
+    """
+    Combine all images in a folder into a single PDF.
+
+    Images are sorted alphabetically and appended in that order.
+    Supported formats: JPEG, PNG, BMP, GIF, TIFF, WEBP.
+
+    Examples:
+        toolbook doc pdf imgs-to-pdf ./my-images
+        toolbook doc pdf imgs-to-pdf ./my-images . --open
+        toolbook doc pdf imgs-to-pdf ./my-images ./output --open
+    """
+
+    def _log(msg: str) -> None:
+        typer.echo(msg)
+
+    result = IMGsToPDF(images_dir, output_path, log=_log)
+
+    if result.startswith("Error"):
+        typer.secho(f"\n❌ {result}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+    typer.secho(f"\n✅ Done — PDF saved to: {result}", fg=typer.colors.GREEN)
+
+    if open_doc:
+        _open_path(result)
+
+
+@pdf_app.command("pdf-to-imgs")
+def pdf_pdf_to_imgs(
+    pdf_file: str = typer.Argument(..., help="Path to the PDF file to convert"),
+    output_path: str = typer.Argument(
+        None,
+        help=(
+            "Base directory where the images folder will be created. "
+            "Omit to use ~/Downloads, use '.' for the current directory."
+        ),
+    ),
+    dpi: int = typer.Option(
+        150, "--dpi", help="Render resolution in DPI (default 150)"
+    ),
+    open_doc: bool = typer.Option(
+        False, "--open", help="Open the output folder after converting"
+    ),
+):
+    """
+    Render every PDF page as a JPEG image.
+
+    Pages are saved as page_1.jpg, page_2.jpg … inside a folder named
+    after the source PDF file.
+
+    Examples:
+        toolbook doc pdf pdf-to-imgs ./document.pdf
+        toolbook doc pdf pdf-to-imgs ./document.pdf . --open
+        toolbook doc pdf pdf-to-imgs ./document.pdf ./output --dpi 300 --open
+    """
+
+    def _log(msg: str) -> None:
+        typer.echo(msg)
+
+    result = PDFToIMGs(pdf_file, output_path, dpi=dpi, log=_log)
+
+    if result.startswith("Error"):
+        typer.secho(f"\n❌ {result}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+    typer.secho(f"\n✅ Done — images saved to: {result}", fg=typer.colors.GREEN)
+
+    if open_doc:
+        _open_path(result)
+
+
+# ── img commands ──────────────────────────────────────────────────────────────
+
+
+@img_app.command("convert-png")
+def img_convert_png(
+    image_file: str = typer.Argument(..., help="Path to the source image file"),
+    output_path: str = typer.Argument(
+        None,
+        help=(
+            "Destination directory or file path for the .png output. "
+            "Omit to use ~/Downloads, use '.' for the current directory."
+        ),
+    ),
+    open_doc: bool = typer.Option(
+        False, "--open", help="Open the converted image after saving"
+    ),
+):
+    """
+    Convert an image to PNG format.
+
+    Examples:
+        toolbook doc img convert-png ./photo.jpg
+        toolbook doc img convert-png ./photo.jpg . --open
+        toolbook doc img convert-png ./photo.jpg ./output --open
+    """
+
+    def _log(msg: str) -> None:
+        typer.echo(msg)
+
+    result = IMGConvertToPNG(image_file, output_path, log=_log)
+
+    if result.startswith("Error"):
+        typer.secho(f"\n❌ {result}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+    typer.secho(f"\n✅ Done — PNG saved to: {result}", fg=typer.colors.GREEN)
+
+    if open_doc:
+        _open_path(result)
+
+
+@img_app.command("convert-jpg")
+@img_app.command("convert-jpeg")
+def img_convert_jpg(
+    image_file: str = typer.Argument(..., help="Path to the source image file"),
+    output_path: str = typer.Argument(
+        None,
+        help=(
+            "Destination directory or file path for the .jpg output. "
+            "Omit to use ~/Downloads, use '.' for the current directory."
+        ),
+    ),
+    open_doc: bool = typer.Option(
+        False, "--open", help="Open the converted image after saving"
+    ),
+):
+    """
+    Convert an image to JPEG/JPG format.
+
+    Examples:
+        toolbook doc img convert-jpg ./photo.png
+        toolbook doc img convert-jpg ./photo.png . --open
+        toolbook doc img convert-jpeg ./photo.png ./output --open
+    """
+
+    def _log(msg: str) -> None:
+        typer.echo(msg)
+
+    result = IMGConvertToJPG(image_file, output_path, log=_log)
+
+    if result.startswith("Error"):
+        typer.secho(f"\n❌ {result}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+    typer.secho(f"\n✅ Done — JPG saved to: {result}", fg=typer.colors.GREEN)
 
     if open_doc:
         _open_path(result)

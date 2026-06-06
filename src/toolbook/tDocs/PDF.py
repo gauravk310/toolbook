@@ -4,6 +4,7 @@ from pypdf import PdfWriter, PdfReader
 from pdf2docx import Converter as _PdfConverter
 from docx2pdf import convert as _docx_to_pdf
 import fitz  # pymupdf
+from PIL import Image as Image_
 
 
 def PDFMerger(pdfs_dir: str, output_dir: str, log=None) -> str:
@@ -414,6 +415,197 @@ def PDFToDocx(
 
 def PDFWatermark():
     return "Pdf watermark tool"
+
+
+def IMGsToPDF(
+    images_dir: str,
+    output_path: str | None = None,
+    log=None,
+) -> str:
+    """
+    Combine all images in a folder into a single PDF file.
+
+    Images are sorted alphabetically and appended in that order.
+    Supported formats: JPEG, PNG, BMP, GIF, TIFF, WEBP.
+
+    Parameters
+    ----------
+    images_dir  : str           Path to a directory containing the image files.
+    output_path : str | None    Destination for the generated PDF.
+                                - If omitted or None  → ~/Downloads/<folder-name>.pdf
+                                - If "."              → ./<folder-name>.pdf (current directory)
+                                - Otherwise           → <given path>/<folder-name>.pdf
+    log         : callable | None
+                                Optional function(str) called for progress messages.
+
+    Returns
+    -------
+    str  Absolute path of the generated .pdf file on success, or an error message.
+
+    Usage (code)
+    ------------
+    from toolbook.tDocs import IMGsToPDF
+    IMGsToPDF("/path/to/images", "/path/to/output", log=print)
+
+    Usage (CLI)
+    -----------
+    toolbook doc pdf imgs-to-pdf <images-dir> [output-path] [--open]
+    """
+
+    _IMG_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".tif", ".webp"}
+
+    def _log(msg: str) -> None:
+        if log is not None:
+            log(msg)
+
+    if not images_dir:
+        return "Error: No folder selected"
+
+    images_dir = os.path.abspath(images_dir)
+
+    if not os.path.isdir(images_dir):
+        return f"Error: '{images_dir}' is not a valid directory"
+
+    # Collect supported images, sorted for deterministic order
+    images: list[Path] = sorted(
+        p
+        for p in Path(images_dir).iterdir()
+        if p.is_file() and p.suffix.lower() in _IMG_EXTS
+    )
+
+    if not images:
+        return f"Error: No supported images found in '{images_dir}'"
+
+    # Resolve output path
+    folder_name = Path(images_dir).name
+    pdf_name = f"{folder_name}.pdf"
+
+    if output_path is None:
+        out_dir = Path.home() / "Downloads"
+    elif output_path == ".":
+        out_dir = Path.cwd()
+    else:
+        out_dir = Path(os.path.abspath(output_path))
+
+    os.makedirs(out_dir, exist_ok=True)
+    out_file = out_dir / pdf_name
+
+    try:
+        _log(f"📂 Source folder : {images_dir}")
+        _log(f"🖼  Images found  : {len(images)}")
+        _log(f"📄 Output        : {out_file}")
+        _log("")
+
+        frames: list[Image_] = []
+        for i, img_path in enumerate(images):
+            img = Image_.open(img_path).convert("RGB")
+            frames.append(img)
+            _log(f"  [{i + 1}/{len(images)}] {img_path.name}")
+
+        frames[0].save(
+            str(out_file),
+            "PDF",
+            save_all=True,
+            append_images=frames[1:],
+        )
+
+        _log("")
+        _log("✔  PDF created")
+        return str(out_file)
+    except Exception as e:
+        return f"Error creating PDF from images: {e}"
+
+
+def PDFToIMGs(
+    pdf_file: str,
+    output_path: str | None = None,
+    dpi: int = 150,
+    log=None,
+) -> str:
+    """
+    Render every page of a PDF as a JPEG image.
+
+    Each page is saved as ``page_1.jpg``, ``page_2.jpg`` … inside a folder
+    named after the source PDF file.
+
+    Parameters
+    ----------
+    pdf_file    : str           Path to the source PDF file.
+    output_path : str | None    Destination base directory for the images folder.
+                                - If omitted or None  → ~/Downloads/<filename>/
+                                - If "."              → ./<filename>/  (current directory)
+                                - Otherwise           → <given path>/<filename>/
+    dpi         : int           Render resolution (default 150).  Higher values
+                                produce sharper images but larger files.
+    log         : callable | None
+                                Optional function(str) called for progress messages.
+
+    Returns
+    -------
+    str  Absolute path of the output folder on success, or an error message.
+
+    Usage (code)
+    ------------
+    from toolbook.tDocs import PDFToIMGs
+    PDFToIMGs("/path/to/file.pdf", "/path/to/output", log=print)
+
+    Usage (CLI)
+    -----------
+    toolbook doc pdf pdf-to-imgs <pdf-file> [output-path] [--open]
+    """
+
+    def _log(msg: str) -> None:
+        if log is not None:
+            log(msg)
+
+    if not pdf_file:
+        return "Error: No file selected"
+
+    pdf_file = os.path.abspath(pdf_file)
+
+    if not os.path.isfile(pdf_file):
+        return f"Error: '{pdf_file}' is not a valid file"
+
+    if not pdf_file.lower().endswith(".pdf"):
+        return f"Error: '{pdf_file}' is not a PDF file"
+
+    # Resolve output folder — named after the PDF stem
+    file_stem = Path(pdf_file).stem
+    if output_path is None:
+        base = Path.home() / "Downloads"
+    elif output_path == ".":
+        base = Path.cwd()
+    else:
+        base = Path(os.path.abspath(output_path))
+
+    output_dir = base / file_stem
+    os.makedirs(output_dir, exist_ok=True)
+
+    try:
+        doc = fitz.open(pdf_file)
+        total = len(doc)
+        # zoom factor: 72 dpi is fitz default, so zoom = dpi / 72
+        zoom = dpi / 72
+        mat = fitz.Matrix(zoom, zoom)
+
+        _log(f"📄 Source        : {pdf_file}")
+        _log(f"📂 Output folder : {output_dir}")
+        _log(f"📑 Total pages   : {total}")
+        _log(f"🖼  Resolution    : {dpi} dpi")
+        _log("")
+
+        for i, page in enumerate(doc):
+            pix = page.get_pixmap(matrix=mat)
+            img_file = output_dir / f"page_{i + 1}.jpg"
+            pix.save(str(img_file))
+            _log(f"  [{i + 1}/{total}] Saved → {img_file.name}")
+
+        doc.close()
+        _log("")
+        _log(f"✔  {total} image{'s' if total != 1 else ''} saved")
+        return str(output_dir)
+    except Exception as e:
+        return f"Error converting PDF to images: {e}"
 
 
 def PDFInfo():
