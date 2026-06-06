@@ -1,6 +1,6 @@
 import os
 import typer
-from toolbook.tDocs import PDFMerger, PDFSplit, PDFIMGExtractor, PDFToDocx
+from toolbook.tDocs import PDFMerger, PDFSplit, PDFIMGExtractor, PDFToDocx, DocxToPDF
 
 app = typer.Typer()
 
@@ -146,6 +146,43 @@ def pdf_convert_docx(
         raise typer.Exit(code=1)
 
     typer.secho(f"\n✅ Done — DOCX saved to: {result}", fg=typer.colors.GREEN)
+
+    if open_doc:
+        _open_path(result)
+
+
+@pdf_app.command("convert-pdf")
+def pdf_convert_pdf(
+    docx_file: str = typer.Argument(..., help="Path to the DOCX file to convert"),
+    output_path: str = typer.Argument(
+        None,
+        help=(
+            "Directory where the .pdf file will be saved. "
+            "Omit to use ~/Downloads, use '.' for the current directory."
+        ),
+    ),
+    open_doc: bool = typer.Option(False, "--open", help="Open the generated PDF after conversion"),
+):
+    """
+    Convert a DOCX file to PDF format.
+
+    Requires Microsoft Word to be installed on Windows.
+
+    Examples:
+        toolbook doc pdf convert-pdf ./document.docx
+        toolbook doc pdf convert-pdf ./document.docx . --open
+        toolbook doc pdf convert-pdf ./document.docx ./output --open
+    """
+    def _log(msg: str) -> None:
+        typer.echo(msg)
+
+    result = DocxToPDF(docx_file, output_path, log=_log)
+
+    if result.startswith("Error"):
+        typer.secho(f"\n❌ {result}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+    typer.secho(f"\n✅ Done — PDF saved to: {result}", fg=typer.colors.GREEN)
 
     if open_doc:
         _open_path(result)

@@ -211,3 +211,55 @@ result = PDFToDocx("./document.pdf", ".", log=print)
 # ⏳ Converting …
 # ✔  Conversion complete
 ```
+
+---
+
+### `doc pdf convert-pdf`
+Convert a DOCX file to PDF format using the Microsoft Word backend.
+Requires Microsoft Word to be installed on Windows.
+
+```bash
+toolbook doc pdf convert-pdf <DOCX_FILE> [OUTPUT_PATH] [--open]
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `DOCX_FILE` | Yes | Path to the .docx file to convert |
+| `OUTPUT_PATH` | No | Directory to save the .pdf file. Omit → `~/Downloads`, `.` → current directory |
+| `--open` | No | Open the generated PDF after conversion |
+
+**Examples:**
+```bash
+# Save to ~/Downloads/
+toolbook doc pdf convert-pdf ./document.docx
+
+# Save to current directory and open the file
+toolbook doc pdf convert-pdf ./document.docx . --open
+
+# Save to custom path
+toolbook doc pdf convert-pdf ./document.docx ./output --open
+```
+
+**Python:**
+```python
+from toolbook.tDocs import DocxToPDF
+
+# Save to ~/Downloads/document.pdf
+result = DocxToPDF("./document.docx")
+print(result)  # ~/Downloads/document.pdf
+
+# Save to current directory: ./document.pdf
+result = DocxToPDF("./document.docx", ".")
+print(result)  # ./document.pdf
+
+# Save to custom path: ./output/document.pdf
+result = DocxToPDF("./document.docx", "./output")
+print(result)  # ./output/document.pdf
+
+# With live progress logs
+result = DocxToPDF("./document.docx", ".", log=print)
+# 📄 Source  : /abs/path/document.docx
+# 📂 Output  : ./document.pdf
+# ⏳ Converting …
+# ✔  Conversion complete
+```

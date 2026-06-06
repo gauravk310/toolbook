@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from pypdf import PdfWriter, PdfReader
 from pdf2docx import Converter as _PdfConverter
+from docx2pdf import convert as _docx_to_pdf
 import fitz  # pymupdf
 
 
@@ -255,6 +256,77 @@ def PDFIMGExtractor(
         return str(output_dir)
     except Exception as e:
         return f"Error extracting images: {e}"
+
+
+def DocxToPDF(
+    docx_file: str,
+    output_path: str | None = None,
+    log=None,
+) -> str:
+    """
+    Convert a DOCX file to PDF format using the MS Word backend (requires Word on Windows).
+
+    Parameters
+    ----------
+    docx_file   : str           Path to the source .docx file.
+    output_path : str | None    Destination directory for the .pdf file.
+                                - If omitted or None  → ~/Downloads/
+                                - If "."              → current directory
+                                - Otherwise           → the given path
+    log         : callable | None
+                                Optional function(str) called for progress messages.
+
+    Returns
+    -------
+    str  Absolute path of the generated .pdf file on success, or an error message.
+
+    Usage (code)
+    ------------
+    from toolbook.tDocs import DocxToPDF
+    DocxToPDF("/path/to/file.docx", "/path/to/output", log=print)
+
+    Usage (CLI)
+    -----------
+    toolbook doc pdf convert-pdf <docx-file> [output-path] [--open]
+    """
+    def _log(msg: str) -> None:
+        if log is not None:
+            log(msg)
+
+    if not docx_file:
+        return "Error: No file selected"
+
+    docx_file = os.path.abspath(docx_file)
+
+    if not os.path.isfile(docx_file):
+        return f"Error: '{docx_file}' is not a valid file"
+
+    if not docx_file.lower().endswith(".docx"):
+        return f"Error: '{docx_file}' is not a DOCX file"
+
+    # Resolve output directory
+    file_stem = Path(docx_file).stem
+    if output_path is None:
+        out_dir = Path.home() / "Downloads"
+    elif output_path == ".":
+        out_dir = Path.cwd()
+    else:
+        out_dir = Path(os.path.abspath(output_path))
+
+    os.makedirs(out_dir, exist_ok=True)
+    pdf_file = out_dir / f"{file_stem}.pdf"
+
+    try:
+        _log(f"📄 Source  : {docx_file}")
+        _log(f"📂 Output  : {pdf_file}")
+        _log("⏳ Converting …")
+
+        _docx_to_pdf(docx_file, str(pdf_file))
+
+        _log("✔  Conversion complete")
+        return str(pdf_file)
+    except Exception as e:
+        return f"Error converting DOCX to PDF: {e}"
 
 
 def PDFToDocx(

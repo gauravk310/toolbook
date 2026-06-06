@@ -12,7 +12,7 @@ Each section links to a dedicated reference file in the `docs/` folder.
 | [Token Management](docs/token-management.md) | `docs/token-management.md` | `set-token`, `show-tokens` |
 | [Reports](docs/reports.md) | `docs/reports.md` | `report system`, `report webscan`, `report codescan`, `report git-repo`, `report git-user` |
 | [System Info](docs/system-info.md) | `docs/system-info.md` | `sys info`, `sys info-*`, `sys organize-files` |
-| [PDF Tools](docs/pdf-tools.md) | `docs/pdf-tools.md` | `doc pdf merge`, `doc pdf split`, `doc pdf extract-img`, `doc pdf convert-docx` |
+| [PDF Tools](docs/pdf-tools.md) | `docs/pdf-tools.md` | `doc pdf merge`, `doc pdf split`, `doc pdf extract-img`, `doc pdf convert-docx`, `doc pdf convert-pdf` |
 
 ---
 
@@ -52,4 +52,5 @@ toolbook doc pdf merge <PDF_DIR> <OUTPUT_DIR> [--open]
 toolbook doc pdf split <PDF_FILE> [OUTPUT_PATH] [--open]
 toolbook doc pdf extract-img <PDF_FILE> [OUTPUT_PATH] [--open]
 toolbook doc pdf convert-docx <PDF_FILE> [OUTPUT_PATH] [--open]
+toolbook doc pdf convert-pdf <DOCX_FILE> [OUTPUT_PATH] [--open]
 ```
