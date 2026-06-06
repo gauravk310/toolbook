@@ -2,14 +2,6 @@ import os
 from pathlib import Path
 
 
-def hello():
-    return "Hello from Toolbook"
-
-
-def add(a, b):
-    return a + b
-
-
 def get_token(token_name: str) -> str | None:
     """
     Get a secret token from os.environ or ~/.toolbook/.env.
