@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
+from typing import Optional
 import typer
+from toolbook import __version__
 from toolbook.commands.reports import app as reports_app
 from toolbook.commands.sys import app as sys_app
 from toolbook.commands.doc import app as doc_app
@@ -16,6 +18,26 @@ if env_file.exists():
                 os.environ[k] = v.strip()
 
 app = typer.Typer()
+
+
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.secho(f"Toolbook v{__version__}", fg=typer.colors.CYAN, bold=True)
+        raise typer.Exit()
+
+
+@app.callback()
+def main(
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-v",
+        help="Show the Toolbook version and exit.",
+        callback=_version_callback,
+        is_eager=True,
+    ),
+) -> None:
+    """Toolbook — document processing, system diagnostics, and reporting toolkit."""
 
 app.add_typer(reports_app, name="report")
 
