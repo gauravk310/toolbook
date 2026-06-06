@@ -91,9 +91,7 @@ toolbook/
 ## Installation
 
 ```bash
-git clone https://github.com/your-username/toolbook.git
-cd toolbook
-pip install -e .
+pip install -i https://test.pypi.org/simple/ toolbook
 ```
 
 Requires Python 3.9 or higher.
