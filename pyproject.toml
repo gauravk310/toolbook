@@ -9,7 +9,8 @@ description = "Collection of useful Python tools"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
-    { name = "Gaurav Kadam" }
+    { name = "Gaurav Kadam" ,
+    email = "gskadam3b@gmail.com"}
 ]
 
 dependencies = [
