@@ -17,9 +17,6 @@ import logging
 import os
 import re
 import subprocess
-import sys
-import tempfile
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field, asdict
@@ -29,8 +26,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 # ─── Optional rich progress bar ──────────────────────────────────────────────
 try:
-    from rich.console import Console
-    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+    from rich.console import Console  # noqa: F401
+    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn  # noqa: F401
     from rich.logging import RichHandler
     _RICH = True
 except ImportError:
@@ -199,7 +196,7 @@ class ComplexityAnalyzer:
             # pyrefly: ignore [missing-import]
             import radon.metrics as rm
             # pyrefly: ignore [missing-import]
-            import radon.visitors as rv
+            import radon.visitors as rv  # noqa: F401
         except ImportError:
             log.warning("radon not installed – skipping complexity analysis (pip install radon)")
             return cc_results, mi_results
@@ -429,8 +426,8 @@ class DuplicateAnalyzer:
                     window = lines[i:i + self.MIN_LINES]
                     # Normalise whitespace & strip comments
                     normalized = "\n".join(
-                        re.sub(r"#.*", "", l).strip() for l in window
-                        if l.strip() and not l.strip().startswith("#")
+                        re.sub(r"#.*", "", line).strip() for line in window
+                        if line.strip() and not line.strip().startswith("#")
                     )
                     if len(normalized) < 40:
                         continue
@@ -561,7 +558,7 @@ def _calculate_scores(report: AnalysisReport) -> None:
 
     # Pylint score already set externally; fall back
     if report.pylint_score == 0 and report.lint:
-        errors = sum(1 for l in report.lint if l.category in ("error", "fatal"))
+        errors = sum(1 for issue in report.lint if issue.category in ("error", "fatal"))
         report.pylint_score = max(0.0, round(100 - errors * 2, 1))
 
     # Overall
@@ -1305,22 +1302,26 @@ def _score_color_class(score: float) -> str:
     return "stat-red"
 
 def _score_class(score: float) -> str:
-    if score >= 80: return "green"
-    if score >= 50: return "yellow"
+    if score >= 80:
+        return "green"
+    if score >= 50:
+        return "yellow"
     return "red"
 
 def _badge_class(count: int, threshold_warn: int = 5, threshold_err: int = 20) -> str:
-    if count == 0: return ""
-    if count < threshold_warn: return "yellow-badge"
+    if count == 0:
+        return ""
+    if count < threshold_warn:
+        return "yellow-badge"
     return "red-badge"
 
 def _render_html(report: AnalysisReport) -> str:
     try:
         
         # pyrefly: ignore [missing-import]
-        from jinja2 import Environment, BaseLoader, pass_eval_context
+        from jinja2 import Environment, BaseLoader, pass_eval_context  # noqa: F401
         # pyrefly: ignore [missing-import]
-        import markupsafe
+        import markupsafe  # noqa: F401
     except ImportError:
         raise RuntimeError("jinja2 required: pip install jinja2")
 
@@ -1340,7 +1341,7 @@ def _render_html(report: AnalysisReport) -> str:
     sec_med  = sum(1 for s in report.security if s.severity == "MEDIUM")
     sec_low  = sum(1 for s in report.security if s.severity == "LOW")
 
-    lint_cat_counter: Dict[str, int] = collections.Counter(l.category for l in report.lint)
+    lint_cat_counter: Dict[str, int] = collections.Counter(item.category for item in report.lint)
     lint_cats = list(lint_cat_counter.most_common(4))
 
     score_rows = [
@@ -1417,8 +1418,10 @@ def _render_html(report: AnalysisReport) -> str:
 
 
 def _fill_class(score: float) -> str:
-    if score >= 80: return "fill-green"
-    if score >= 50: return "fill-yellow"
+    if score >= 80:
+        return "fill-green"
+    if score >= 50:
+        return "fill-yellow"
     return "fill-red"
 
 
@@ -1592,4 +1595,4 @@ def codeReport(
     }
 
     return html_path, summary
-
+

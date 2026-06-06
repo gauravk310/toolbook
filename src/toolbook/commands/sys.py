@@ -42,7 +42,7 @@ def _print_cpu(data: dict) -> None:
 
     per_core = data.get("cpu_per_core_usage", [])
     if per_core:
-        typer.secho(f"\n  Per-Core Usage", fg=typer.colors.YELLOW)
+        typer.secho("\n  Per-Core Usage", fg=typer.colors.YELLOW)
         for i, pct in enumerate(per_core):
             bar_len = int(pct / 5)          # 20 chars = 100 %
             bar  = ("█" * bar_len).ljust(20)

@@ -36,8 +36,16 @@ Optional (screenshots)
 """
 
 import webbrowser
-import os, re, ssl, json, time, socket, base64, hashlib
-import logging, datetime, ipaddress, urllib.parse
+import os
+import re
+import ssl
+import json
+import time
+import socket
+import base64
+import logging
+import datetime
+import urllib.parse
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -77,15 +85,21 @@ log = logging.getLogger("web_report")
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _score_color(score: int) -> str:
-    if score >= 80: return "#00e676"
-    if score >= 60: return "#ffab00"
-    if score >= 40: return "#ff7043"
+    if score >= 80:
+        return "#00e676"
+    if score >= 60:
+        return "#ffab00"
+    if score >= 40:
+        return "#ff7043"
     return "#ff3d57"
 
 def _score_label(score: int) -> str:
-    if score >= 80: return "Good"
-    if score >= 60: return "Needs Work"
-    if score >= 40: return "Poor"
+    if score >= 80:
+        return "Good"
+    if score >= 60:
+        return "Needs Work"
+    if score >= 40:
+        return "Poor"
     return "Critical"
 
 def _bool_badge(val: bool, t="✓ Yes", f="✗ No") -> str:
@@ -154,8 +168,10 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
     html_lower    = html.lower()
 
     def _resolve(host):
-        try:    return socket.gethostbyname(host.split(":")[0])
-        except: return "N/A"
+        try:
+            return socket.gethostbyname(host.split(":")[0])
+        except Exception:
+            return "N/A"
 
     ip = _resolve(domain)
     robots  = _get(f"{scheme}://{domain}/robots.txt")
@@ -179,7 +195,8 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
             ctx = ssl.create_default_context()
             host_clean = domain.split(":")[0]
             with ctx.wrap_socket(socket.socket(), server_hostname=host_clean) as s:
-                s.settimeout(5); s.connect((host_clean, 443))
+                s.settimeout(5)
+                s.connect((host_clean, 443))
                 cert = s.getpeercert()
                 not_after = datetime.datetime.strptime(cert["notAfter"], "%b %d %H:%M:%S %Y %Z")
                 days_left = (not_after - datetime.datetime.utcnow()).days
@@ -262,31 +279,44 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
     seo_issues, seo = [], {}
 
     title = (soup.find("title") or {}).get_text(strip=True) if soup.find("title") else ""
-    seo["title"] = title; seo["title_len"] = len(title)
-    if not title: seo_issues.append("Missing <title> tag")
-    elif len(title)<30: seo_issues.append("Title too short (< 30 chars)")
-    elif len(title)>60: seo_issues.append("Title too long (> 60 chars)")
+    seo["title"] = title
+    seo["title_len"] = len(title)
+    if not title:
+        seo_issues.append("Missing <title> tag")
+    elif len(title) < 30:
+        seo_issues.append("Title too short (< 30 chars)")
+    elif len(title) > 60:
+        seo_issues.append("Title too long (> 60 chars)")
 
     md = soup.find("meta", attrs={"name":"description"})
     meta_desc = md.get("content","") if md else ""
-    seo["meta_desc"] = meta_desc; seo["meta_desc_len"] = len(meta_desc)
-    if not meta_desc: seo_issues.append("Missing meta description")
-    elif len(meta_desc)>160: seo_issues.append("Meta description too long (> 160 chars)")
+    seo["meta_desc"] = meta_desc
+    seo["meta_desc_len"] = len(meta_desc)
+    if not meta_desc:
+        seo_issues.append("Missing meta description")
+    elif len(meta_desc) > 160:
+        seo_issues.append("Meta description too long (> 160 chars)")
 
     headings = {t:[h.get_text(strip=True) for h in soup.find_all(t)] for t in ["h1","h2","h3","h4","h5","h6"]}
     seo["headings"] = headings
-    if not headings["h1"]: seo_issues.append("No H1 heading found")
-    elif len(headings["h1"])>1: seo_issues.append(f"Multiple H1 tags ({len(headings['h1'])})")
+    if not headings["h1"]:
+        seo_issues.append("No H1 heading found")
+    elif len(headings["h1"]) > 1:
+        seo_issues.append(f"Multiple H1 tags ({len(headings['h1'])})")
 
     canonical = soup.find("link", rel="canonical")
     seo["canonical"] = canonical["href"] if canonical and canonical.get("href") else ""
-    if not seo["canonical"]: seo_issues.append("No canonical URL")
+    if not seo["canonical"]:
+        seo_issues.append("No canonical URL")
 
     og = {t.get("property",""): t.get("content","") for t in soup.find_all("meta", property=re.compile(r"^og:"))}
     tw = {t.get("name",""): t.get("content","") for t in soup.find_all("meta", attrs={"name":re.compile(r"^twitter:")})}
-    seo["og"] = og; seo["twitter"] = tw
-    if not og: seo_issues.append("No OpenGraph tags")
-    if not tw: seo_issues.append("No Twitter Card tags")
+    seo["og"] = og
+    seo["twitter"] = tw
+    if not og:
+        seo_issues.append("No OpenGraph tags")
+    if not tw:
+        seo_issues.append("No Twitter Card tags")
 
     schema = soup.find_all("script", type="application/ld+json")
     seo["structured_data"] = len(schema)
@@ -299,19 +329,26 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
             (int_links if domain in h else ext_links).append(h)
         elif h.startswith("/") or not h.startswith(("#","mailto:","tel:")):
             int_links.append(h)
-    seo["internal_links"] = len(int_links); seo["external_links"] = len(ext_links)
+    seo["internal_links"] = len(int_links)
+    seo["external_links"] = len(ext_links)
 
     imgs = soup.find_all("img")
     missing_alts = [i for i in imgs if not i.get("alt")]
-    seo["images_total"] = len(imgs); seo["images_no_alt"] = len(missing_alts)
-    if missing_alts: seo_issues.append(f"{len(missing_alts)} image(s) missing alt text")
+    seo["images_total"] = len(imgs)
+    seo["images_no_alt"] = len(missing_alts)
+    if missing_alts:
+        seo_issues.append(f"{len(missing_alts)} image(s) missing alt text")
 
     vp = soup.find("meta", attrs={"name":"viewport"})
     seo["viewport"] = bool(vp)
-    if not vp: seo_issues.append("No viewport meta tag")
-    seo["has_robots"] = has_robots; seo["has_sitemap"] = has_sitemap
-    if not has_robots: seo_issues.append("robots.txt not found")
-    if not has_sitemap: seo_issues.append("sitemap.xml not found")
+    if not vp:
+        seo_issues.append("No viewport meta tag")
+    seo["has_robots"] = has_robots
+    seo["has_sitemap"] = has_sitemap
+    if not has_robots:
+        seo_issues.append("robots.txt not found")
+    if not has_sitemap:
+        seo_issues.append("sitemap.xml not found")
 
     seo_score = max(0, 100 - len(seo_issues)*8)
 
@@ -322,10 +359,14 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
     compressed = enc_hdr in ("gzip","br","deflate")
     cache_ctrl = headers.get("Cache-Control","")
     etag       = headers.get("ETag","")
-    if not compressed:  perf_issues.append("Compression (gzip/br) not enabled")
-    if not cache_ctrl and not etag: perf_issues.append("No caching headers found")
-    if page_size_kb > 3000: perf_issues.append(f"Large page size ({page_size_kb} KB)")
-    if ttfb > 800: perf_issues.append(f"High TTFB ({ttfb} ms)")
+    if not compressed:
+        perf_issues.append("Compression (gzip/br) not enabled")
+    if not cache_ctrl and not etag:
+        perf_issues.append("No caching headers found")
+    if page_size_kb > 3000:
+        perf_issues.append(f"Large page size ({page_size_kb} KB)")
+    if ttfb > 800:
+        perf_issues.append(f"High TTFB ({ttfb} ms)")
 
     scripts  = soup.find_all("script", src=True)
     css_tags = soup.find_all("link", rel="stylesheet")
@@ -342,24 +383,28 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
     # ── 5. Accessibility ───────────────────────────────────────────────────────
     log.info("Accessibility …")
     a11y_issues = []
-    if missing_alts: a11y_issues.append(f"{len(missing_alts)} image(s) without alt text")
+    if missing_alts:
+        a11y_issues.append(f"{len(missing_alts)} image(s) without alt text")
 
     inputs = soup.find_all("input")
     unlabeled = [i for i in inputs
                  if i.get("type","text") not in ("hidden","submit","button","image")
                  and not i.get("aria-label") and not i.get("aria-labelledby")
                  and not soup.find("label", attrs={"for": i.get("id","__none__")})]
-    if unlabeled: a11y_issues.append(f"{len(unlabeled)} form input(s) without labels")
+    if unlabeled:
+        a11y_issues.append(f"{len(unlabeled)} form input(s) without labels")
 
     hlevels = [int(h.name[1]) for h in soup.find_all(re.compile(r"^h[1-6]$"))]
     if hlevels and any(hlevels[i+1]-hlevels[i]>1 for i in range(len(hlevels)-1)):
         a11y_issues.append("Heading hierarchy skipped (e.g. H1 → H3)")
 
     lang_attr = bool(soup.find("html", lang=True))
-    if not lang_attr: a11y_issues.append("HTML lang attribute missing")
+    if not lang_attr:
+        a11y_issues.append("HTML lang attribute missing")
 
     empty_btns = [b for b in soup.find_all("button") if not b.get_text(strip=True) and not b.get("aria-label")]
-    if empty_btns: a11y_issues.append(f"{len(empty_btns)} empty button(s) without aria-label")
+    if empty_btns:
+        a11y_issues.append(f"{len(empty_btns)} empty button(s) without aria-label")
 
     a11y = {
         "lang": lang_attr,
@@ -378,12 +423,18 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
     srv = headers.get("Server","").lower()
     xpb = headers.get("X-Powered-By","").lower()
 
-    if "cloudflare" in srv or "cf-ray" in hdrs_l: techs.append({"name":"Cloudflare","cat":"CDN","via":"header"})
-    if "nginx"     in srv: techs.append({"name":"Nginx","cat":"Web Server","via":"header"})
-    if "apache"    in srv: techs.append({"name":"Apache","cat":"Web Server","via":"header"})
-    if "php"       in xpb or "php" in srv: techs.append({"name":"PHP","cat":"Language","via":"header"})
-    if "express"   in xpb: techs.append({"name":"Express","cat":"Framework","via":"header"})
-    if "node"      in xpb: techs.append({"name":"Node.js","cat":"Runtime","via":"header"})
+    if "cloudflare" in srv or "cf-ray" in hdrs_l:
+        techs.append({"name":"Cloudflare","cat":"CDN","via":"header"})
+    if "nginx" in srv:
+        techs.append({"name":"Nginx","cat":"Web Server","via":"header"})
+    if "apache" in srv:
+        techs.append({"name":"Apache","cat":"Web Server","via":"header"})
+    if "php" in xpb or "php" in srv:
+        techs.append({"name":"PHP","cat":"Language","via":"header"})
+    if "express" in xpb:
+        techs.append({"name":"Express","cat":"Framework","via":"header"})
+    if "node" in xpb:
+        techs.append({"name":"Node.js","cat":"Runtime","via":"header"})
 
     _patterns = [
         ("React",      [r"__reactfiber", r"react\.production"]),
@@ -404,7 +455,8 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
         if name not in existing:
             for p in pats:
                 if re.search(p, html_lower):
-                    techs.append({"name":name,"cat":"Frontend","via":"html"}); break
+                    techs.append({"name":name,"cat":"Frontend","via":"html"})
+                    break
 
     # ── 7. DNS ─────────────────────────────────────────────────────────────────
     log.info("DNS …")
@@ -413,7 +465,8 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
         for rtype in ("A","MX","TXT","NS","CNAME"):
             try:
                 dns_records[rtype] = [str(r) for r in dns_resolver.resolve(domain.split(":")[0], rtype)]
-            except: dns_records[rtype] = []
+            except Exception:
+                dns_records[rtype] = []
     else:
         dns_records["note"] = "dnspython not installed"
 
@@ -426,7 +479,9 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
     }
     detected_cdn = "None"
     for cdn, sigs in cdn_map.items():
-        if any(s in hdrs_l for s in sigs): detected_cdn = cdn; break
+        if any(s in hdrs_l for s in sigs):
+            detected_cdn = cdn
+            break
     dns_records["cdn"] = detected_cdn
 
     # ── 8. Screenshots ─────────────────────────────────────────────────────────
@@ -437,13 +492,19 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
                 ctx = browser.new_context(viewport={"width":1280,"height":800})
-                pg  = ctx.new_page(); pg.goto(final_url, timeout=20000, wait_until="networkidle")
-                if delay > 0: pg.wait_for_timeout(delay * 1000)
-                d_png = pg.screenshot(full_page=True); ctx.close()
+                pg  = ctx.new_page()
+                pg.goto(final_url, timeout=20000, wait_until="networkidle")
+                if delay > 0:
+                    pg.wait_for_timeout(delay * 1000)
+                d_png = pg.screenshot(full_page=True)
+                ctx.close()
                 ctx2 = browser.new_context(**p.devices["iPhone 12"])
-                pg2  = ctx2.new_page(); pg2.goto(final_url, timeout=20000, wait_until="networkidle")
-                if delay > 0: pg2.wait_for_timeout(delay * 1000)
-                m_png = pg2.screenshot(full_page=True); ctx2.close()
+                pg2  = ctx2.new_page()
+                pg2.goto(final_url, timeout=20000, wait_until="networkidle")
+                if delay > 0:
+                    pg2.wait_for_timeout(delay * 1000)
+                m_png = pg2.screenshot(full_page=True)
+                ctx2.close()
                 browser.close()
             def _b64(data):
                 if HAS_PIL:
@@ -451,10 +512,12 @@ def run_scan(url: str, delay: int = 0) -> dict[str, Any]:
                     if img.width > 1200:
                         ratio = 1200/img.width
                         img = img.resize((1200,int(img.height*ratio)), Image.LANCZOS)
-                    buf = BytesIO(); img.save(buf,"PNG",optimize=True)
+                    buf = BytesIO()
+                    img.save(buf,"PNG",optimize=True)
                     data = buf.getvalue()
                 return base64.b64encode(data).decode()
-            desktop_b64 = _b64(d_png); mobile_b64 = _b64(m_png)
+            desktop_b64 = _b64(d_png)
+            mobile_b64 = _b64(m_png)
         except Exception as e:
             log.warning("Screenshot failed: %s", e)
     else:
@@ -589,7 +652,10 @@ def _section_shell(title: str, extra_css: str = "", extra_head: str = "") -> tup
 # ══════════════════════════════════════════════════════════════════════════════
 
 def build_summary(d: dict) -> str:
-    sc = d["security_score"]; seo = d["seo_score"]; pc = d["perf_score"]; ac = d["a11y_score"]
+    sc = d["security_score"]
+    seo = d["seo_score"]
+    pc = d["perf_score"]
+    ac = d["a11y_score"]
     ov = d["overall_score"]
     risk = d["risk_level"]
     all_issues = len(d["sec_issues"])+len(d["seo_issues"])+len(d["perf_issues"])+len(d["a11y_issues"])
@@ -787,7 +853,9 @@ def build_siteinfo(d: dict) -> str:
 
 
 def build_security(d: dict) -> str:
-    sec = d["sec"]; issues = d["sec_issues"]; score = d["security_score"]
+    sec = d["sec"]
+    issues = d["sec_issues"]
+    score = d["security_score"]
     ssl = sec.get("ssl", {})
 
     css = """
@@ -912,10 +980,14 @@ def build_security(d: dict) -> str:
 
 
 def build_seo(d: dict) -> str:
-    seo = d["seo"]; issues = d["seo_issues"]; score = d["seo_score"]
-    tl = seo["title_len"]; t_pct = min(100, int(tl/60*100))
+    seo = d["seo"]
+    issues = d["seo_issues"]
+    score = d["seo_score"]
+    tl = seo["title_len"]
+    t_pct = min(100, int(tl/60*100))
     t_color = "#00e676" if 30<=tl<=60 else "#ff3d57"
-    ml = seo["meta_desc_len"]; m_pct = min(100, int(ml/160*100))
+    ml = seo["meta_desc_len"]
+    m_pct = min(100, int(ml/160*100))
     m_color = "#00e676" if ml<=160 else "#ff3d57"
 
     h1s = seo["headings"].get("h1",[])
@@ -926,7 +998,7 @@ def build_seo(d: dict) -> str:
             h_rows += f'<div style="padding:6px 0 6px {indent}px;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--mono)"><span style="font-size:9px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:1px 5px;margin-right:8px">{tag.upper()}</span>{_esc(txt[:80])}</div>'
 
     og_items = "".join(f'<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;font-family:var(--mono);margin:3px"><div style="color:var(--accent2);font-size:10px;margin-bottom:4px">{_esc(k)}</div><div>{_esc(v[:100])}</div></div>'
-                       for k,v in seo["og"].items()) or f'<span class="badge badge-bad">No OpenGraph tags found</span>'
+                       for k,v in seo["og"].items()) or '<span class="badge badge-bad">No OpenGraph tags found</span>'
 
     issue_li = "".join(f'<li><span class="icon">⚠️</span>{_esc(x)}</li>' for x in issues) \
                or '<li><span class="icon">✅</span>All checks passed</li>'
@@ -1006,7 +1078,9 @@ def build_seo(d: dict) -> str:
 
 
 def build_performance(d: dict) -> str:
-    perf = d["perf"]; issues = d["perf_issues"]; score = d["perf_score"]
+    perf = d["perf"]
+    issues = d["perf_issues"]
+    score = d["perf_score"]
     ttfb = perf["ttfb"]
     tc = "#00e676" if ttfb<400 else "#ffab00" if ttfb<800 else "#ff3d57"
     issue_li = "".join(f'<li><span class="icon">⚠️</span>{_esc(x)}</li>' for x in issues) \
@@ -1070,7 +1144,9 @@ def build_performance(d: dict) -> str:
 
 
 def build_accessibility(d: dict) -> str:
-    a11y = d["a11y"]; issues = d["a11y_issues"]; score = d["a11y_score"]
+    a11y = d["a11y"]
+    issues = d["a11y_issues"]
+    score = d["a11y_score"]
     issue_li = "".join(f'<li><span class="icon">⚠️</span>{_esc(x)}</li>' for x in issues) \
                or '<li><span class="icon">✅</span>All checks passed</li>'
 
@@ -1256,7 +1332,10 @@ def build_screenshots(d: dict) -> str:
 
 
 def build_charts(d: dict) -> str:
-    sc = d["security_score"]; seo = d["seo_score"]; pc = d["perf_score"]; ac = d["a11y_score"]
+    sc = d["security_score"]
+    seo = d["seo_score"]
+    pc = d["perf_score"]
+    ac = d["a11y_score"]
     ov = d["overall_score"]
     data = json.dumps({
         "scores": [sc, seo, pc, ac],

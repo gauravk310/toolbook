@@ -77,7 +77,7 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
                 <td>{gpu.VideoProcessor}</td>
                 <td>{int(gpu.AdapterRAM or 0) // (1024**2)} MB</td>
             </tr>"""
-    except:
+    except Exception:
         gpu_rows = '<tr><td colspan="4" class="empty-row">Unable to fetch GPU information</td></tr>'
 
     # =====================================================
@@ -111,7 +111,7 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
             disk_labels.append(partition.device.rstrip("\\"))
             disk_used.append(round(usage.used / (1024**3), 2))
             disk_free.append(round(usage.free / (1024**3), 2))
-        except:
+        except Exception:
             continue
 
     disk_labels_json = json.dumps(disk_labels)
@@ -312,7 +312,7 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
             </tr>"""
             if len(proc_top10) < 10:
                 proc_top10.append({"name": info["name"][:22], "pct": round(pct, 2)})
-        except:
+        except Exception:
             continue
 
     proc_names_json = json.dumps([p["name"] for p in proc_top10])
@@ -327,7 +327,7 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
         command = 'powershell "Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* |Select-Object DisplayName"'
         output = subprocess.check_output(command, shell=True).decode(errors="ignore")
         installed_apps = [a.strip() for a in output.splitlines()[1:80] if a.strip()]
-    except:
+    except Exception:
         installed_apps = ["Unable to fetch installed apps"]
 
     app_cards = ""
@@ -411,7 +411,7 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
                 try:
                     junk_size  += os.path.getsize(os.path.join(root, file))
                     junk_files += 1
-                except:
+                except Exception:
                     continue
 
     junk_size_mb = round(junk_size / (1024**2), 2)
@@ -424,7 +424,7 @@ def SystemReport(output_path="advanced_system_report.html",open_report=False):
         activation = subprocess.check_output(
             'cscript //Nologo "%windir%\\system32\\slmgr.vbs" /xpr', shell=True
         ).decode(errors="ignore").strip()
-    except:
+    except Exception:
         activation = "Unable to fetch activation status"
 
     # =====================================================

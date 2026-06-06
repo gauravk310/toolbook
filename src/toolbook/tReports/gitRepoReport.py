@@ -19,18 +19,14 @@ Options:
 from __future__ import annotations
 
 import argparse
-import asyncio
 import base64
-import csv
 import json
 import logging
 import math
-import os
-import re
 import sys
 import time
-from collections import Counter, defaultdict
-from dataclasses import asdict, dataclass, field
+from collections import Counter
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -46,7 +42,7 @@ except ImportError:
     sys.exit("requests is required: pip install requests")
 
 try:
-    import pandas as pd
+    import pandas as pd  # noqa: F401
 except ImportError:
     sys.exit("pandas is required: pip install pandas")
 
@@ -58,11 +54,11 @@ except ImportError:
 # Optional – graceful degradation if missing
 try:
     # pyrefly: ignore [missing-import]
-    import plotly.graph_objects as go
+    import plotly.graph_objects as go  # noqa: F401
     # pyrefly: ignore [missing-import]
-    import plotly.express as px
+    import plotly.express as px  # noqa: F401
     # pyrefly: ignore [missing-import]
-    from plotly.subplots import make_subplots
+    from plotly.subplots import make_subplots  # noqa: F401
     HAS_PLOTLY = True
 except ImportError:
     HAS_PLOTLY = False
@@ -257,13 +253,20 @@ def analyze_repo_overview(client: GitHubClient,
     has_wiki  = bool(data.get("has_wiki"))
 
     health = 50
-    if has_desc:  health += 10
-    if has_lic:   health += 10
-    if has_wiki:  health += 5
-    if topics:    health += 5
-    if idle_days < 30:  health += 15
-    elif idle_days < 90: health += 8
-    if stars > 100:  health += 5
+    if has_desc:
+        health += 10
+    if has_lic:
+        health += 10
+    if has_wiki:
+        health += 5
+    if topics:
+        health += 5
+    if idle_days < 30:
+        health += 15
+    elif idle_days < 90:
+        health += 8
+    if stars > 100:
+        health += 5
 
     return {
         "name": data.get("name", ""),
@@ -422,9 +425,12 @@ def detect_technologies(client: GitHubClient,
 
     # Language-based detection
     for lang in languages:
-        if lang == "TypeScript": detected.add("TypeScript")
-        if lang == "Go":         detected.add("Go")
-        if lang == "Rust":       detected.add("Rust")
+        if lang == "TypeScript":
+            detected.add("TypeScript")
+        if lang == "Go":
+            detected.add("Go")
+        if lang == "Rust":
+            detected.add("Rust")
 
     # File-based detection
     def _check_file(path: str) -> str:
@@ -506,12 +512,18 @@ def detect_technologies(client: GitHubClient,
 
 def _devops_score(techs: set, workflows: list) -> int:
     score = 0
-    if "GitHub Actions" in techs: score += 30
-    if "Docker" in techs:          score += 20
-    if "Docker Compose" in techs:  score += 10
-    if "Kubernetes" in techs:      score += 20
-    if "Terraform" in techs:       score += 15
-    if workflows:                  score += min(len(workflows) * 5, 15)
+    if "GitHub Actions" in techs:
+        score += 30
+    if "Docker" in techs:
+        score += 20
+    if "Docker Compose" in techs:
+        score += 10
+    if "Kubernetes" in techs:
+        score += 20
+    if "Terraform" in techs:
+        score += 15
+    if workflows:
+        score += min(len(workflows) * 5, 15)
     return min(100, score)
 
 
@@ -1449,7 +1461,7 @@ def _build_chart_data(commits: dict, languages: dict,
 
     # Languages
     lang_labels = list(languages.keys())[:8]
-    lang_data   = [languages[l]["pct"] for l in lang_labels]
+    lang_data   = [languages[lang]["pct"] for lang in lang_labels]
 
     # Contributors
     contrib_labels = [c.login for c in contributors[:10]]
@@ -1462,7 +1474,7 @@ def _build_chart_data(commits: dict, languages: dict,
         if d:
             release_counts[d] += 1
     release_labels = sorted(release_counts.keys())[-18:]
-    release_data   = [release_counts[l] for l in release_labels]
+    release_data   = [release_counts[rel] for rel in release_labels]
 
     return {
         "monthly_labels": monthly_labels,

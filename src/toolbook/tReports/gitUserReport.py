@@ -3,25 +3,19 @@ GitHub User Report Generator
 Generates a comprehensive, interactive HTML analytics dashboard for any GitHub user.
 """
 
-import os
 import json
 import logging
 import time
-import hashlib
-import asyncio
-import aiohttp
 import requests
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
 import plotly.io as pio
-from datetime import datetime, timezone, timedelta
-from collections import defaultdict, Counter
+from datetime import datetime, timezone
+from collections import Counter
 from typing import Optional
 from pathlib import Path
 from jinja2 import Template
-from github import Github, GithubException, RateLimitExceededException, Auth
+from github import Github, RateLimitExceededException, Auth
 from toolbook.utils import get_token
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -340,7 +334,7 @@ class GitHubAnalyzer:
             "by_bytes": dict(lang_bytes.most_common(15)),
             "by_repos": dict(lang_repo_count.most_common(15)),
             "percentages": language_pcts,
-            "top_languages": [l for l, _ in lang_bytes.most_common(6)],
+            "top_languages": [lang for lang, _ in lang_bytes.most_common(6)],
             "total_languages": len(lang_bytes),
         }
 
@@ -352,15 +346,6 @@ class GitHubAnalyzer:
             tech = self.fetcher.detect_tech_stack(repo)
             for t in tech:
                 all_tech[t] += 1
-        framework_map = {
-            "Python": ["Django", "Flask", "FastAPI", "Pandas", "NumPy"],
-            "Node.js": ["Express", "React", "Next.js", "Vue", "Angular"],
-            "Docker": ["Docker Compose", "Kubernetes"],
-            "Go": [],
-            "Rust": [],
-            "Java/Maven": ["Spring"],
-            "Ruby": ["Rails"],
-        }
         categories = {
             "backend": [],
             "frontend": [],
@@ -508,7 +493,6 @@ class GitHubAnalyzer:
         pr_events = [e for e in events if e.get("type") == "PullRequestEvent"]
         issue_events = [e for e in events if e.get("type") == "IssuesEvent"]
         review_events = [e for e in events if e.get("type") == "PullRequestReviewEvent"]
-        fork_events = [e for e in events if e.get("type") == "ForkEvent"]
         follower_ratio = (
             round(user.followers / max(user.following, 1), 2) if user.following else user.followers
         )
@@ -580,7 +564,7 @@ class ChartGenerator:
         if not pcts:
             return "{}"
         labels = list(pcts.keys())[:10]
-        values = [pcts[l] for l in labels]
+        values = [pcts[label] for label in labels]
         colors = [
             "#00D8FF", "#F7E018", "#3178C6", "#00ADD8", "#B07219",
             "#E34C26", "#563D7C", "#F1502F", "#00A88E", "#CC342D",
