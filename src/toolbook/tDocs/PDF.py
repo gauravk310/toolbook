@@ -1,16 +1,19 @@
 import os
 from pathlib import Path
-from pypdf import PdfMerger as _PdfMerger, PdfReader, PdfWriter
+from pypdf import PdfWriter, PdfReader
+import fitz  # pymupdf
 
 
-def PDFMerger(pdfs_dir: str, output_dir: str) -> str:
+def PDFMerger(pdfs_dir: str, output_dir: str, log=None) -> str:
     """
     Merge all PDF files found in *pdfs_dir* into a single PDF saved in *output_dir*.
 
     Parameters
     ----------
-    pdfs_dir  : str  Path to a directory that contains the PDF files to merge.
-    output_dir: str  Directory where the merged PDF will be written.
+    pdfs_dir  : str           Path to a directory that contains the PDF files to merge.
+    output_dir: str           Directory where the merged PDF will be written.
+    log       : callable | None
+                              Optional function(str) called for each progress message.
 
     Returns
     -------
@@ -19,12 +22,16 @@ def PDFMerger(pdfs_dir: str, output_dir: str) -> str:
     Usage (code)
     ------------
     from toolbook.tDocs import PDFMerger
-    PDFMerger("/path/to/pdfs", "/path/to/output")
+    PDFMerger("/path/to/pdfs", "/path/to/output", log=print)
 
     Usage (CLI)
     -----------
-    toolbook doc pdf --merge <pdf-dir> <output-dir>
+    toolbook doc pdf merge <pdf-dir> <output-dir>
     """
+    def _log(msg: str) -> None:
+        if log is not None:
+            log(msg)
+
     pdfs_dir = os.path.abspath(pdfs_dir)
     output_dir = os.path.abspath(output_dir)
 
@@ -40,24 +47,35 @@ def PDFMerger(pdfs_dir: str, output_dir: str) -> str:
     if len(pdfs) < 2:
         return f"Need at least 2 PDF files in '{pdfs_dir}', found {len(pdfs)}"
 
-    merger = _PdfMerger()
+    _log(f"📂 Source folder : {pdfs_dir}")
+    _log(f"📑 PDFs found    : {len(pdfs)}")
+    _log("")
+
+    writer = PdfWriter()
     try:
-        for pdf in pdfs:
-            merger.append(pdf)
+        total_pages = 0
+        for i, pdf in enumerate(pdfs):
+            reader = PdfReader(pdf)
+            pages = len(reader.pages)
+            for page in reader.pages:
+                writer.add_page(page)
+            total_pages += pages
+            _log(f"  [{i + 1}/{len(pdfs)}] {Path(pdf).name}  [{pages} page{'s' if pages > 1 else ''}]")
 
         os.makedirs(output_dir, exist_ok=True)
 
-        # Output filename is derived from the first PDF's stem
-        first_stem = Path(pdfs[0]).stem
-        output_name = f"{first_stem}_merged.pdf"
+        # Output filename is derived from the source folder name
+        folder_name = Path(pdfs_dir).name
+        output_name = f"{folder_name}_merged.pdf"
         output_path = os.path.join(output_dir, output_name)
 
-        merger.write(output_path)
+        with open(output_path, "wb") as f:
+            writer.write(f)
+        _log("")
+        _log(f"📄 Total pages   : {total_pages}")
         return output_path
     except Exception as e:
         return f"Error merging PDFs: {e}"
-    finally:
-        merger.close()
 
 
 def PDFSplit(
@@ -140,6 +158,102 @@ def PDFSplit(
         return str(output_dir)
     except Exception as e:
         return f"Error splitting PDF: {e}"
+
+
+def PDFIMGExtractor(
+    pdf_file: str,
+    output_path: str | None = None,
+    log=None,
+) -> str:
+    """
+    Extract all images from a PDF file, saving each as a separate image file
+    inside a folder named after the source PDF.
+
+    Parameters
+    ----------
+    pdf_file    : str           Path to the source PDF file.
+    output_path : str | None    Destination base directory for the images folder.
+                                - If omitted or None  → ~/Downloads/<filename>/
+                                - If "."              → ./<filename>/  (current directory)
+                                - Otherwise           → <given path>/<filename>/
+    log         : callable | None
+                                Optional function(str) called for each progress
+                                message (e.g. ``print`` or ``typer.echo``).
+
+    Returns
+    -------
+    str  Absolute path of the output directory on success, or an error message string.
+
+    Usage (code)
+    ------------
+    from toolbook.tDocs import PDFIMGExtractor
+    PDFIMGExtractor("/path/to/file.pdf", "/path/to/output", log=print)
+
+    Usage (CLI)
+    -----------
+    toolbook doc pdf extract-img <pdf-file> [output-path]
+    """
+    def _log(msg: str) -> None:
+        if log is not None:
+            log(msg)
+
+    if not pdf_file:
+        return "Error: No file selected"
+
+    pdf_file = os.path.abspath(pdf_file)
+
+    if not os.path.isfile(pdf_file):
+        return f"Error: '{pdf_file}' is not a valid file"
+
+    if not pdf_file.lower().endswith(".pdf"):
+        return f"Error: '{pdf_file}' is not a PDF file"
+
+    # Resolve output directory — always a sub-folder named after the PDF
+    file_stem = Path(pdf_file).stem
+    if output_path is None:
+        base = Path.home() / "Downloads"
+    elif output_path == ".":
+        base = Path.cwd()
+    else:
+        base = Path(os.path.abspath(output_path))
+
+    output_dir = base / file_stem
+
+    try:
+        doc = fitz.open(pdf_file)
+        total_pages = len(doc)
+        os.makedirs(output_dir, exist_ok=True)
+
+        _log(f"📂 Output folder : {output_dir}")
+        _log(f"📄 Source        : {pdf_file}")
+        _log(f"📑 Total pages   : {total_pages}")
+        _log("")
+
+        image_count = 0
+        for page_index in range(total_pages):
+            page_images = doc.get_page_images(page_index)
+            _log(f"  Page {page_index + 1}/{total_pages} — {len(page_images)} image(s) found")
+
+            for img in page_images:
+                xref = img[0]
+                base_image = doc.extract_image(xref)
+                image_bytes = base_image["image"]
+                ext = base_image["ext"]
+                image_file = output_dir / f"image_p{page_index + 1}_{xref}.{ext}"
+                with open(image_file, "wb") as f:
+                    f.write(image_bytes)
+                image_count += 1
+                _log(f"    ✔ Saved → {image_file.name}")
+
+        _log("")
+        _log(f"🖼  Total images extracted: {image_count}")
+
+        if image_count == 0:
+            return f"Error: No images found in '{pdf_file}'"
+
+        return str(output_dir)
+    except Exception as e:
+        return f"Error extracting images: {e}"
 
 
 def PDFWatermark():
