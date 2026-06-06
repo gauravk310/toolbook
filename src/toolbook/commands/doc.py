@@ -1,7 +1,6 @@
 import os
-import subprocess
 import typer
-from toolbook.tDocs import PDFMerger, PDFSplit, PDFIMGExtractor
+from toolbook.tDocs import PDFMerger, PDFSplit, PDFIMGExtractor, PDFToDocx
 
 app = typer.Typer()
 
@@ -24,7 +23,7 @@ def pdf_merge(
     """
     Merge all PDFs in a directory into a single file.
 
-    Example:
+    Examples:
         toolbook doc pdf merge ./my-pdfs ./output
         toolbook doc pdf merge ./my-pdfs ./output --open
     """
@@ -112,6 +111,41 @@ def pdf_extract_img(
         raise typer.Exit(code=1)
 
     typer.secho(f"\n✅ Done — images saved to: {result}", fg=typer.colors.GREEN)
+
+    if open_doc:
+        _open_path(result)
+
+
+@pdf_app.command("convert-docx")
+def pdf_convert_docx(
+    pdf_file: str = typer.Argument(..., help="Path to the PDF file to convert"),
+    output_path: str = typer.Argument(
+        None,
+        help=(
+            "Directory where the .docx file will be saved. "
+            "Omit to use ~/Downloads, use '.' for the current directory."
+        ),
+    ),
+    open_doc: bool = typer.Option(False, "--open", help="Open the generated .docx file after conversion"),
+):
+    """
+    Convert a PDF to DOCX format.
+
+    Examples:
+        toolbook doc pdf convert-docx ./document.pdf
+        toolbook doc pdf convert-docx ./document.pdf . --open
+        toolbook doc pdf convert-docx ./document.pdf ./output --open
+    """
+    def _log(msg: str) -> None:
+        typer.echo(msg)
+
+    result = PDFToDocx(pdf_file, output_path, log=_log)
+
+    if result.startswith("Error"):
+        typer.secho(f"\n❌ {result}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+    typer.secho(f"\n✅ Done — DOCX saved to: {result}", fg=typer.colors.GREEN)
 
     if open_doc:
         _open_path(result)

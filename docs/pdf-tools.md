@@ -159,3 +159,55 @@ result = PDFIMGExtractor("./document.pdf", ".", log=print)
 #
 # 🖼  Total images extracted: 3
 ```
+
+---
+
+### `doc pdf convert-docx`
+Convert a PDF file to DOCX format.
+The output file is saved as `<pdf-name>.docx` in the chosen directory.
+
+```bash
+toolbook doc pdf convert-docx <PDF_FILE> [OUTPUT_PATH] [--open]
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `PDF_FILE` | Yes | Path to the PDF file to convert |
+| `OUTPUT_PATH` | No | Directory to save the .docx file. Omit → `~/Downloads`, `.` → current directory |
+| `--open` | No | Open the generated .docx file after conversion |
+
+**Examples:**
+```bash
+# Save to ~/Downloads/
+toolbook doc pdf convert-docx ./document.pdf
+
+# Save to current directory and open the file
+toolbook doc pdf convert-docx ./document.pdf . --open
+
+# Save to custom path
+toolbook doc pdf convert-docx ./document.pdf ./output --open
+```
+
+**Python:**
+```python
+from toolbook.tDocs import PDFToDocx
+
+# Save to ~/Downloads/document.docx
+result = PDFToDocx("./document.pdf")
+print(result)  # ~/Downloads/document.docx
+
+# Save to current directory: ./document.docx
+result = PDFToDocx("./document.pdf", ".")
+print(result)  # ./document.docx
+
+# Save to custom path: ./output/document.docx
+result = PDFToDocx("./document.pdf", "./output")
+print(result)  # ./output/document.docx
+
+# With live progress logs
+result = PDFToDocx("./document.pdf", ".", log=print)
+# 📄 Source  : /abs/path/document.pdf
+# 📂 Output  : ./document.docx
+# ⏳ Converting …
+# ✔  Conversion complete
+```

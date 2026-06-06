@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from pypdf import PdfWriter, PdfReader
+from pdf2docx import Converter as _PdfConverter
 import fitz  # pymupdf
 
 
@@ -254,6 +255,79 @@ def PDFIMGExtractor(
         return str(output_dir)
     except Exception as e:
         return f"Error extracting images: {e}"
+
+
+def PDFToDocx(
+    pdf_file: str,
+    output_path: str | None = None,
+    log=None,
+) -> str:
+    """
+    Convert a PDF file to DOCX format.
+
+    Parameters
+    ----------
+    pdf_file    : str           Path to the source PDF file.
+    output_path : str | None    Destination directory for the .docx file.
+                                - If omitted or None  → ~/Downloads/
+                                - If "."              → current directory
+                                - Otherwise           → the given path
+    log         : callable | None
+                                Optional function(str) called for progress messages.
+
+    Returns
+    -------
+    str  Absolute path of the generated .docx file on success, or an error message.
+
+    Usage (code)
+    ------------
+    from toolbook.tDocs import PDFToDocx
+    PDFToDocx("/path/to/file.pdf", "/path/to/output", log=print)
+
+    Usage (CLI)
+    -----------
+    toolbook doc pdf convert-docx <pdf-file> [output-path] [--open]
+    """
+    def _log(msg: str) -> None:
+        if log is not None:
+            log(msg)
+
+    if not pdf_file:
+        return "Error: No file selected"
+
+    pdf_file = os.path.abspath(pdf_file)
+
+    if not os.path.isfile(pdf_file):
+        return f"Error: '{pdf_file}' is not a valid file"
+
+    if not pdf_file.lower().endswith(".pdf"):
+        return f"Error: '{pdf_file}' is not a PDF file"
+
+    # Resolve output directory
+    file_stem = Path(pdf_file).stem
+    if output_path is None:
+        out_dir = Path.home() / "Downloads"
+    elif output_path == ".":
+        out_dir = Path.cwd()
+    else:
+        out_dir = Path(os.path.abspath(output_path))
+
+    os.makedirs(out_dir, exist_ok=True)
+    docx_file = out_dir / f"{file_stem}.docx"
+
+    try:
+        _log(f"📄 Source  : {pdf_file}")
+        _log(f"📂 Output  : {docx_file}")
+        _log("⏳ Converting …")
+
+        cv = _PdfConverter(pdf_file)
+        cv.convert(str(docx_file), start=0, end=None)
+        cv.close()
+
+        _log("✔  Conversion complete")
+        return str(docx_file)
+    except Exception as e:
+        return f"Error converting PDF to DOCX: {e}"
 
 
 def PDFWatermark():
