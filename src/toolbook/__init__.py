@@ -1,4 +1,4 @@
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 # my_library/__init__.py
 __author__ = "Gaurav Kadam"
 __email__ = "gskadam3b@gmail.com"
